@@ -41,8 +41,8 @@ function smarty_checkout_field_scripts()
     if (is_checkout()) {
         wp_enqueue_script('smarty-validation-js');
         wp_localize_script('smarty-validation-js', 'smarty_params', array(
-            'api_url' => 'https://us-street.api.smartystreets.com/street-address',
-            'api_key' => defined('SMARTY_API_KEY') ? SMARTY_API_KEY : '' // Ensure your API key is correctly defined and secured
+            'api_url' => 'https://us-autocomplete-pro.api.smartystreets.com/lookup',
+            'api_key' => defined('SMARTY_API_KEY') ? SMARTY_API_KEY : ''
         ));
     }
 }

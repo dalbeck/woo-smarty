@@ -1,48 +1,85 @@
 jQuery(function($) {
-    var fields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state'];
+    // URL and API key from PHP
+    var apiUrl = smarty_params.api_url;
+    var apiKey = smarty_params.api_key;
 
-    // Function to check if all fields have values
-    function allFieldsFilled() {
-        for (var i = 0; i < fields.length; i++) {
-            if ($(fields[i]).val() === '') {
-                return false;
-            }
-        }
-        return true;
-    }
+    // Listening to input changes on the address input field for real-time autocomplete
+    $('#billing_address_1').on('input', function() {
+        var searchQuery = $(this).val();
 
-    // Attach event handler to all relevant fields for combined address validation
-    $(fields.join(',')).on('change', function() {
-        if (allFieldsFilled()) {
-            var street = $('#billing_address_1').val();
-            var city = $('#billing_city').val();
-            var state = $('#billing_state').val();
-            var zipcode = $('#billing_postcode').val();
-            var apiUrl = smarty_params.api_url;
-            var apiKey = smarty_params.api_key;
-
-            console.log('Validating address:', street, city, state, zipcode);
-
+        // Check if input length is sufficient to trigger API call
+        if (searchQuery.length > 3) { // Query when more than 3 characters are typed
             $.ajax({
-                url: apiUrl + '?auth-token=' + apiKey + '&street=' + encodeURIComponent(street) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state) + '&zipcode=' + encodeURIComponent(zipcode) + '&candidates=1',
+                url: apiUrl + '?key=' + apiKey + '&search=' + encodeURIComponent(searchQuery),
                 method: 'GET',
                 success: function(data) {
                     console.log('API response:', data);
-                    if (data[0] && data[0].components) {
-                        $('#billing_address_1').css('border', '2px solid green');
-                        console.log('Address is valid.');
-                    } else {
-                        $('#billing_address_1').css('border', '2px solid red');
-                        console.log('Address is invalid.');
+                    // Assuming data contains suggestions, this is where you would update a dropdown
+                    // Update a dropdown list or suggestions box with results
+                    var suggestionsList = $('#address-suggestions');
+                    suggestionsList.empty();
+                    if (data.suggestions) {
+                        data.suggestions.forEach(function(suggestion) {
+                            suggestionsList.append($('<option>').val(suggestion.text).text(suggestion.text));
+                        });
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     console.error('AJAX error:', textStatus, errorThrown);
-                    $('#billing_address_1').css('border', '2px solid orange');
+                }
+            });
+        }
+    });
+
+    // Add the suggestions container after the billing address field
+    var suggestionsBox = $('<div id="address-suggestions" style="position: absolute; display: none; z-index: 1000; background: white; border: 1px solid #ccc;"></div>').insertAfter('#billing_address_1');
+
+    // Function to adjust the width of the suggestions box to match the input field
+    function adjustSuggestionsBoxWidth() {
+        var inputWidth = $('#billing_address_1').outerWidth(); // Get the outer width of the input field
+        suggestionsBox.width(inputWidth); // Set the width of the suggestions box
+    }
+
+    // Adjust the width initially and on window resize
+    adjustSuggestionsBoxWidth();
+    $(window).resize(adjustSuggestionsBoxWidth);
+
+    // Listen for input on the billing address field
+    $('#billing_address_1').on('input', function() {
+        var searchQuery = $(this).val();
+
+        if (searchQuery.length > 3) {
+            $.ajax({
+                url: smarty_params.api_url + '?key=' + smarty_params.api_key + '&search=' + encodeURIComponent(searchQuery),
+                method: 'GET',
+                success: function(data) {
+                    console.log('Data received:', data); // Debugging: log data to console
+                    suggestionsBox.empty().show();
+                    if (data.suggestions && data.suggestions.length) {
+                        data.suggestions.forEach(function(suggestion) {
+                            var fullAddress = suggestion.street_line + ', ' + suggestion.city + ', ' + suggestion.state + ' ' + (suggestion.zipcode || '');
+                            var suggestionDiv = $('<div class="suggestion-item">').text(fullAddress);
+                            suggestionDiv.on('click', function() {
+                                $('#billing_address_1').val(suggestion.street_line);
+                                $('#billing_address_2').val(suggestion.secondary || '');
+                                $('#billing_city').val(suggestion.city);
+                                $('#billing_state').val(suggestion.state).trigger('change');
+                                $('#billing_postcode').val(suggestion.zipcode);
+                                suggestionsBox.hide();
+                            });
+                            suggestionsBox.append(suggestionDiv);
+                        });
+                    } else {
+                        suggestionsBox.append('<div class="suggestion-item">No results found</div>');
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('AJAX error:', textStatus, errorThrown);
+                    suggestionsBox.hide();
                 }
             });
         } else {
-            console.log('Not all address fields are filled yet.');
+            suggestionsBox.hide();
         }
     });
 });
