@@ -90,3 +90,13 @@
 .inner-modal button:hover {
     background-color: #E8605A; /* Slightly darker shade for hover */
 }
+
+
+@media (max-width: 768px) {
+    .api-col-container {
+        flex-direction: column;
+    }
+    .api-col-1 {
+        margin-bottom: 30px;
+    }
+}
