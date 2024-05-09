@@ -22,7 +22,7 @@ if ( !in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', 
 }
 
 function smarty_enqueue_scripts() {
-    wp_enqueue_script( 'smarty-validation-js', plugins_url( 'js/validation.js', __FILE__ ), array('jquery'), '1.0', true );
+    wp_enqueue_script( 'smarty-validation-js', plugins_url( 'js/validation.js', __FILE__ ), array(), '1.0', true );
     wp_enqueue_style( 'smarty-validation-css', plugins_url( 'css/style.css', __FILE__ ), array(), '1.0' );
 }
 
