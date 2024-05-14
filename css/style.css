@@ -76,15 +76,15 @@
 
 .inner-modal button {
     background-color: #F3716D;
-    border-radius: 30px !important;
     color: #ffffff;
     font-size: 16px;
     padding: 12px 20px;
     border: none;
     cursor: pointer;
     transition: all 0.2s;
-    border-radius: 5px;
     margin-top: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
 }
 
 .inner-modal button:hover {

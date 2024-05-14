@@ -6,14 +6,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h4 id="modal-heading">Confirm Address</h4>
                 <div class="api-col-container">
                     <div class="api-col api-col-1">
-                        <p><strong>Your Entry:</strong></p>
+                        <p><strong>Your Entered:</strong></p>
                         <div id="user-entered-address"></div>
-                        <button id="use-original-address">Use My Address</button>
+                        <button id="use-original-address">Keep Original Address</button>
                     </div>
                     <div class="api-col api-col-2">
                         <p><strong>Suggested Address:</strong></p>
                         <div id="api-suggested-address"></div>
-                        <button id="use-corrected-address">Use Corrected Address</button>
+                        <button id="use-corrected-address">Use Suggested Address</button>
                     </div>
                 </div>
             </div>
