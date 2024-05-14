@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Address validation script loaded'); // Confirm script load
+
     // Create and append the modal structure to the body
     const modalHTML = `
         <div id="address-validation-modal" style="display: none;">
@@ -23,8 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const apiUrl = smarty_params.api_url;
     const apiKey = smarty_params.api_key;
+    const authId = smarty_params.auth_id;
+    const authToken = smarty_params.auth_token;
     let apiResponseData;
     let bypassApiCall = false;
+    let currentAddressType = 'billing'; // Default to billing, will be updated dynamically
 
     const fields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state'];
     const shippingFields = ['#shipping_address_1', '#shipping_city', '#shipping_postcode', '#shipping_state'];
@@ -37,16 +42,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleAddressValidation(fields, addressType) {
+        currentAddressType = addressType; // Update currentAddressType dynamically
         if (!bypassApiCall && allFieldsFilled(fields)) {
             const street = document.querySelector(fields[0]).value;
             const city = document.querySelector(fields[1]).value;
             const state = document.querySelector(fields[3]).value;
             const zipcode = document.querySelector(fields[2]).value;
 
-            fetch(`${apiUrl}?auth-token=${apiKey}&street=${encodeURIComponent(street)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipcode=${encodeURIComponent(zipcode)}&candidates=1`)
-                .then(response => response.json())
+            const requestUrl = `${apiUrl}?key=${apiKey}&street=${encodeURIComponent(street)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipcode=${encodeURIComponent(zipcode)}&candidates=1`;
+
+            console.log(`Validating ${addressType} address:`, { street, city, state, zipcode });
+            console.log('Request URL:', requestUrl);
+
+            fetch(requestUrl)
+                .then(response => {
+                    console.log('API response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data[0] && data[0].components) {
+                    console.log('API response:', data);
+                    if (data.length > 0 && data[0].components) {
                         apiResponseData = data;
                         const components = data[0].components;
                         console.log('Validated Address:', components);  // Specifically log the validated address components
@@ -57,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="modal-zip">${zipcode}</span>
                         `;
                         document.getElementById('api-suggested-address').innerHTML = `
-                            <span class="modal-street">${components.primary_number} ${components.street_name}</span>
+                            <span class="modal-street">${components.primary_number} ${components.street_name} ${components.street_suffix || ''}</span>
                             ${components.secondary_number ? `<span> ${components.secondary_number}</span>` : ''}
                             <span class="modal-city">${components.city_name}</span>
                             <span class="modal-state">${components.state_abbreviation}</span>
@@ -68,15 +86,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('address-validation-modal').style.display = 'flex';
                     } else {
                         document.querySelector(fields[0]).style.border = '2px solid red';
+                        console.log('Address validation failed:', data);
                     }
                 })
                 .catch(error => {
                     console.error('AJAX error:', error);
                     document.querySelector(fields[0]).style.border = '2px solid orange';
                 });
+        } else {
+            console.log(`${addressType} address fields are not completely filled.`);
         }
     }
-
 
     document.getElementById('use-original-address').addEventListener('click', () => {
         document.getElementById('address-validation-modal').style.display = 'none';
@@ -89,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const components = apiResponseData[0].components;
             const addressFields = currentAddressType === 'billing' ? fields : shippingFields;
 
-            document.querySelector(addressFields[0]).value = components.primary_number + ' ' + components.street_name;
+            document.querySelector(addressFields[0]).value = components.primary_number + ' ' + components.street_name + ' ' + (components.street_suffix || '');
             document.querySelector(addressFields[1]).value = components.city_name;
             document.querySelector(addressFields[2]).value = components.zipcode + (components.plus4_code ? '-' + components.plus4_code : '');
             const stateField = document.querySelector(addressFields[3]);
@@ -104,26 +124,41 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     fields.forEach(selector => {
-        document.querySelector(selector).addEventListener('change', () => {
-            handleAddressValidation(fields, 'billing');
-        });
-    });
-
-    shippingFields.forEach(selector => {
-        document.querySelector(selector).addEventListener('change', () => {
-            const checkbox = document.getElementById('ship-to-different-address-checkbox');
-            if (checkbox && checkbox.checked) {
-                handleAddressValidation(shippingFields, 'shipping');
-            }
-        });
-    });
-
-    document.getElementById('ship-to-different-address-checkbox').addEventListener('change', function() {
-        const modal = document.getElementById('address-validation-modal');
-        if (!this.checked) {
-            modal.style.display = 'none'; // Hide modal if shipping is unchecked
+        const element = document.querySelector(selector);
+        if (element) {
+            element.addEventListener('change', () => {
+                handleAddressValidation(fields, 'billing');
+            });
+        } else {
+            console.error(`Element not found for selector: ${selector}`);
         }
     });
 
-    console.log('Address validation script loaded');
+    shippingFields.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.addEventListener('change', () => {
+                const checkbox = document.getElementById('ship-to-different-address-checkbox');
+                if (checkbox && checkbox.checked) {
+                    handleAddressValidation(shippingFields, 'shipping');
+                }
+            });
+        } else {
+            console.error(`Element not found for selector: ${selector}`);
+        }
+    });
+
+    const checkbox = document.getElementById('ship-to-different-address-checkbox');
+    if (checkbox) {
+        checkbox.addEventListener('change', function() {
+            const modal = document.getElementById('address-validation-modal');
+            if (!this.checked) {
+                modal.style.display = 'none'; // Hide modal if shipping is unchecked
+            }
+        });
+    } else {
+        console.error('Shipping address checkbox not found');
+    }
+
+    console.log('Address validation script setup complete');
 });
