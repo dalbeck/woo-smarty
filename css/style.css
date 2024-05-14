@@ -90,6 +90,13 @@
     background-color: #E8605A; /* Slightly darker shade for hover */
 }
 
+#validation-failed-message, #address-not-found-message {
+    text-align: center;
+}
+
+.validation-failed {
+    outline: 2px solid red !important;
+}
 
 @media (max-width: 768px) {
     .api-col-container {
