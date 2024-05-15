@@ -36,8 +36,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const apiUrl = smarty_params.api_url;
     const apiKey = smarty_params.api_key;
-    const authId = smarty_params.auth_id;
-    const authToken = smarty_params.auth_token;
     let apiResponseData;
     let bypassApiCall = false;
     let currentAddressType = 'billing'; // Default to billing, will be updated dynamically
@@ -92,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (wrapper) {
                                 wrapper.removeAttribute('data-validated');
                             }
+                            input.removeAttribute('disabled');
                         }
                     });
 
@@ -139,12 +138,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                     if (wrapper) {
                                         wrapper.setAttribute('data-validated', 'true');
                                     }
+                                    input.setAttribute('disabled', 'true');
+                                    input.style.backgroundColor = '#f0f0f0'; // Gray out the input
                                 }
                             });
 
                             // Populate #billing_address_2 only if both secondary_designator and delivery_point are present
                             if (components.secondary_designator && components.delivery_point) {
                                 document.querySelector('#billing_address_2').value = secondaryAddress;
+                            }
+
+                            // Lock #billing_address_2 even if no value is present
+                            const billingAddress2 = document.querySelector('#billing_address_2');
+                            if (billingAddress2) {
+                                billingAddress2.setAttribute('disabled', 'true');
+                                billingAddress2.style.backgroundColor = '#f0f0f0'; // Gray out the input
                             }
                         }
                     } else {
@@ -241,6 +249,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const wrapper = input.closest('.woocommerce-input-wrapper');
                     if (wrapper) {
                         wrapper.setAttribute('data-validated', 'true');
+                        input.setAttribute('disabled', 'true'); // Disable the input fields
+                        input.style.backgroundColor = '#f0f0f0'; // Gray out the input
                     }
                 }
             });
@@ -249,6 +259,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 bypassApiCall = false;
                 document.getElementById('address-validation-modal').style.display = 'none';
             }, 100);
+
+            // Insert the link to allow re-editing the address fields
+            const billingEmailField = document.getElementById('billing_email_field');
+            if (billingEmailField && !document.getElementById('edit-address-link')) {
+                const editAddressLink = document.createElement('a');
+                editAddressLink.id = 'edit-address-link';
+                editAddressLink.href = '#';
+                editAddressLink.textContent = 'Click here to update your address.';
+                editAddressLink.style.display = 'block';
+                editAddressLink.style.marginTop = '10px';
+                billingEmailField.insertAdjacentElement('afterend', editAddressLink);
+
+                editAddressLink.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    location.reload();
+                });
+            }
         }
     });
 
@@ -268,10 +295,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             element.addEventListener('input', () => {
-                // Remove validation class when user starts typing
+                // Remove validation class and re-enable inputs when user starts typing
                 const wrapper = element.closest('.woocommerce-input-wrapper');
                 if (wrapper) {
                     wrapper.removeAttribute('data-validated');
+                    element.removeAttribute('disabled');
+                    element.style.backgroundColor = ''; // Remove gray out
                 }
             });
         } else {
@@ -290,10 +319,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             element.addEventListener('input', () => {
-                // Remove validation class when user starts typing
+                // Remove validation class and re-enable inputs when user starts typing
                 const wrapper = element.closest('.woocommerce-input-wrapper');
                 if (wrapper) {
                     wrapper.removeAttribute('data-validated');
+                    element.removeAttribute('disabled');
+                    element.style.backgroundColor = ''; // Remove gray out
                 }
             });
         } else {

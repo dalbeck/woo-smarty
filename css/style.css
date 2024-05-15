@@ -115,6 +115,16 @@
     height: 16px;
 }
 
+#edit-address-link {
+    margin-bottom: 10px;
+    text-decoration: underline;
+    transition: all 0.2s ease-in-out;
+}
+
+#edit-address-link:hover {
+    color: #F3716D !important;
+}
+
 @media (max-width: 768px) {
     .api-col-container {
         flex-direction: column;
