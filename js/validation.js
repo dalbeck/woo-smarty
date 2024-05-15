@@ -42,10 +42,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let bypassApiCall = false;
     let currentAddressType = 'billing'; // Default to billing, will be updated dynamically
 
-    const fields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state'];
+    const requiredFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state'];
+    const allFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state', '#billing_address_2'];
     const shippingFields = ['#shipping_address_1', '#shipping_city', '#shipping_postcode', '#shipping_state'];
 
-    function allFieldsFilled(fields) {
+    function allRequiredFieldsFilled(fields) {
         return fields.every(selector => {
             const input = document.querySelector(selector);
             return input && input.value;
@@ -54,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleAddressValidation(fields, addressType) {
         currentAddressType = addressType; // Update currentAddressType dynamically
-        if (!bypassApiCall && allFieldsFilled(fields)) {
+        if (!bypassApiCall && allRequiredFieldsFilled(requiredFields)) {
             const street = document.querySelector(fields[0]).value;
             const city = document.querySelector(fields[1]).value;
             const state = document.querySelector(fields[3]).value;
@@ -82,11 +83,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     const addressNotFoundMessage = document.getElementById('address-not-found-message');
                     const failedFieldsList = document.getElementById('failed-fields-list');
 
-                    // Remove validation-failed class from all fields
-                    fields.forEach(selector => {
+                    // Remove validation-failed class and data-validated attribute from all fields
+                    allFields.forEach(selector => {
                         const input = document.querySelector(selector);
                         if (input) {
                             input.classList.remove('validation-failed');
+                            const wrapper = input.closest('.woocommerce-input-wrapper');
+                            if (wrapper) {
+                                wrapper.removeAttribute('data-validated');
+                            }
                         }
                     });
 
@@ -111,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             `;
                             const secondaryAddress = components.secondary_designator
                                 ? `${components.secondary_designator} ${components.delivery_point}`
-                                : components.delivery_point || '';
+                                : '';
                             document.getElementById('api-suggested-address').innerHTML = `
                                 <span class="modal-street">${components.primary_number} ${components.street_name} ${components.street_suffix || ''}</span>
                                 ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
@@ -125,6 +130,22 @@ document.addEventListener('DOMContentLoaded', function() {
                             validationFailedMessage.style.display = 'none';
                             addressNotFoundMessage.style.display = 'none';
                             modal.style.display = 'flex';
+
+                            // Add data-validated attribute to wrapper of fields
+                            allFields.forEach(selector => {
+                                const input = document.querySelector(selector);
+                                if (input && input.value) {
+                                    const wrapper = input.closest('.woocommerce-input-wrapper');
+                                    if (wrapper) {
+                                        wrapper.setAttribute('data-validated', 'true');
+                                    }
+                                }
+                            });
+
+                            // Populate #billing_address_2 only if both secondary_designator and delivery_point are present
+                            if (components.secondary_designator && components.delivery_point) {
+                                document.querySelector('#billing_address_2').value = secondaryAddress;
+                            }
                         }
                     } else {
                         console.log('Address validation failed:', data);
@@ -135,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         modal.style.display = 'flex';
 
                         // Highlight the fields that failed validation
-                        fields.forEach(selector => {
+                        requiredFields.forEach(selector => {
                             const input = document.querySelector(selector);
                             if (input) {
                                 input.classList.add('validation-failed');
@@ -143,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
 
                         // Add list of failed fields to the modal
-                        failedFieldsList.innerHTML = fields.map(selector => {
+                        failedFieldsList.innerHTML = requiredFields.map(selector => {
                             const input = document.querySelector(selector);
                             if (input && !input.value) {
                                 return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
@@ -168,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     modal.style.display = 'flex';
 
                     // Highlight the fields that failed validation
-                    fields.forEach(selector => {
+                    requiredFields.forEach(selector => {
                         const input = document.querySelector(selector);
                         if (input) {
                             input.classList.add('validation-failed');
@@ -176,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
 
                     // Add list of failed fields to the modal
-                    failedFieldsList.innerHTML = fields.map(selector => {
+                    failedFieldsList.innerHTML = requiredFields.map(selector => {
                         const input = document.querySelector(selector);
                         if (input && !input.value) {
                             return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
@@ -198,13 +219,13 @@ document.addEventListener('DOMContentLoaded', function() {
             bypassApiCall = true;
 
             const components = apiResponseData[0].components;
-            const addressFields = currentAddressType === 'billing' ? fields : shippingFields;
+            const addressFields = currentAddressType === 'billing' ? allFields : shippingFields;
 
             document.querySelector(addressFields[0]).value = components.primary_number + ' ' + components.street_name + ' ' + (components.street_suffix || '');
             const secondaryAddress = components.secondary_designator
                 ? `${components.secondary_designator} ${components.delivery_point}`
-                : components.delivery_point || '';
-            if (secondaryAddress) {
+                : '';
+            if (components.secondary_designator && components.delivery_point) {
                 document.querySelector('#billing_address_2').value = secondaryAddress;
             }
             document.querySelector(addressFields[1]).value = components.city_name;
@@ -212,6 +233,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const stateField = document.querySelector(addressFields[3]);
             stateField.value = components.state_abbreviation;
             stateField.dispatchEvent(new Event('change'));
+
+            // Add data-validated attribute to wrapper of fields
+            addressFields.forEach(selector => {
+                const input = document.querySelector(selector);
+                if (input && input.value) {
+                    const wrapper = input.closest('.woocommerce-input-wrapper');
+                    if (wrapper) {
+                        wrapper.setAttribute('data-validated', 'true');
+                    }
+                }
+            });
 
             setTimeout(() => {
                 bypassApiCall = false;
@@ -228,11 +260,19 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('address-validation-modal').style.display = 'none';
     });
 
-    fields.forEach(selector => {
+    allFields.forEach(selector => {
         const element = document.querySelector(selector);
         if (element) {
             element.addEventListener('change', () => {
-                handleAddressValidation(fields, 'billing');
+                handleAddressValidation(allFields, 'billing');
+            });
+
+            element.addEventListener('input', () => {
+                // Remove validation class when user starts typing
+                const wrapper = element.closest('.woocommerce-input-wrapper');
+                if (wrapper) {
+                    wrapper.removeAttribute('data-validated');
+                }
             });
         } else {
             console.error(`Element not found for selector: ${selector}`);
@@ -246,6 +286,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const checkbox = document.getElementById('ship-to-different-address-checkbox');
                 if (checkbox && checkbox.checked) {
                     handleAddressValidation(shippingFields, 'shipping');
+                }
+            });
+
+            element.addEventListener('input', () => {
+                // Remove validation class when user starts typing
+                const wrapper = element.closest('.woocommerce-input-wrapper');
+                if (wrapper) {
+                    wrapper.removeAttribute('data-validated');
                 }
             });
         } else {

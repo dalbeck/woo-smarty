@@ -98,6 +98,23 @@
     outline: 2px solid red !important;
 }
 
+.woocommerce-input-wrapper {
+    position: relative;
+}
+
+.woocommerce-input-wrapper[data-validated="true"]::after {
+    content: '';
+    background-image: url('/wp-content/plugins/smarty-address-validation/img/green-check.svg') !important;
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+}
+
 @media (max-width: 768px) {
     .api-col-container {
         flex-direction: column;
