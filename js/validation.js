@@ -40,9 +40,10 @@ jQuery(document).ready(function($) {
     let bypassApiCall = false;
     let currentAddressType = 'billing'; // Default to billing, will be updated dynamically
 
-    const requiredFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state'];
-    const allFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state', '#billing_address_2'];
-    const shippingFields = ['#shipping_address_1', '#shipping_city', '#shipping_postcode', '#shipping_state'];
+    const billingRequiredFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state'];
+    const billingAllFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state', '#billing_address_2'];
+    const shippingRequiredFields = ['#shipping_address_1', '#shipping_city', '#shipping_postcode', '#shipping_state'];
+    const shippingAllFields = ['#shipping_address_1', '#shipping_city', '#shipping_postcode', '#shipping_state', '#shipping_address_2'];
 
     function allRequiredFieldsFilled(fields) {
         return fields.every(selector => {
@@ -53,6 +54,8 @@ jQuery(document).ready(function($) {
 
     function handleAddressValidation(fields, addressType) {
         currentAddressType = addressType; // Update currentAddressType dynamically
+        const requiredFields = addressType === 'billing' ? billingRequiredFields : shippingRequiredFields;
+
         if (!bypassApiCall && allRequiredFieldsFilled(requiredFields)) {
             const street = $(fields[0]).val().trim();
             const city = $(fields[1]).val().trim();
@@ -82,7 +85,7 @@ jQuery(document).ready(function($) {
                     const failedFieldsList = $('#failed-fields-list');
 
                     // Remove validation-failed class and data-validated attribute from all fields
-                    allFields.forEach(selector => {
+                    fields.forEach(selector => {
                         const input = $(selector);
                         if (input.length) {
                             input.removeClass('validation-failed');
@@ -133,7 +136,7 @@ jQuery(document).ready(function($) {
                             modal.show();
 
                             // Add data-validated attribute to wrapper of fields
-                            allFields.forEach(selector => {
+                            fields.forEach(selector => {
                                 const input = $(selector);
                                 if (input.length && input.val().trim()) {
                                     const wrapper = input.closest('.woocommerce-input-wrapper');
@@ -146,17 +149,17 @@ jQuery(document).ready(function($) {
                                 }
                             });
 
-                            // Populate #billing_address_2 only if both secondary_designator and delivery_point are present
+                            // Populate address_2 only if both secondary_designator and delivery_point are present
                             if (components.secondary_designator && components.delivery_point) {
-                                $('#billing_address_2').val(secondaryAddress);
+                                $(fields[4]).val(secondaryAddress);
                             }
 
-                            // Lock #billing_address_2 even if no value is present
-                            const billingAddress2 = $('#billing_address_2');
-                            if (billingAddress2.length) {
-                                billingAddress2.attr('readonly', 'true');
-                                billingAddress2.addClass('readonly'); // Add readonly class
-                                billingAddress2.css('background-color', '#f0f0f0'); // Gray out the input
+                            // Lock address_2 even if no value is present
+                            const address2 = $(fields[4]);
+                            if (address2.length) {
+                                address2.attr('readonly', 'true');
+                                address2.addClass('readonly'); // Add readonly class
+                                address2.css('background-color', '#f0f0f0'); // Gray out the input
                             }
                         }
                     } else {
@@ -212,7 +215,7 @@ jQuery(document).ready(function($) {
                     failedFieldsList.html(requiredFields.map(selector => {
                         const input = $(selector);
                         if (input.length && !input.val().trim()) {
-                            return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l.toUpperCase())}</li>`;
+                            return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
                         }
                         return '';
                     }).join(''));
@@ -224,8 +227,9 @@ jQuery(document).ready(function($) {
 
     $('#use-original-address').on('click', () => {
         $('#address-validation-modal').hide();
-        // Remove data-validated attribute and readonly class from all fields
-        allFields.forEach(selector => {
+        // Remove data-validated attribute and readonly class from current address type fields
+        const fields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
+        fields.forEach(selector => {
             const input = $(selector);
             if (input.length) {
                 const wrapper = input.closest('.woocommerce-input-wrapper');
@@ -244,14 +248,14 @@ jQuery(document).ready(function($) {
             bypassApiCall = true;
 
             const components = apiResponseData[0].components;
-            const addressFields = currentAddressType === 'billing' ? allFields : shippingFields;
+            const addressFields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
 
             $(addressFields[0]).val(`${components.primary_number} ${components.street_name} ${components.street_suffix || ''}`);
             const secondaryAddress = components.secondary_designator
                 ? `${components.secondary_designator} ${components.delivery_point}`
                 : '';
             if (components.secondary_designator && components.delivery_point) {
-                $('#billing_address_2').val(secondaryAddress);
+                $(addressFields[4]).val(secondaryAddress);
             }
             $(addressFields[1]).val(components.city_name);
             $(addressFields[2]).val(`${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`);
@@ -279,15 +283,15 @@ jQuery(document).ready(function($) {
             }, 100);
 
             // Insert the link to allow re-editing the address fields
-            const billingEmailField = $('#billing_email_field');
-            if (billingEmailField.length && !$('#edit-address-link').length) {
+            const emailField = currentAddressType === 'billing' ? $('#billing_email_field') : $('#shipping_email_field');
+            if (emailField.length && !$('#edit-address-link').length) {
                 const editAddressLink = $('<a>', {
                     id: 'edit-address-link',
                     href: '#',
                     text: 'Click here to update your address.',
                     style: 'display: block; margin-top: 10px;'
                 });
-                billingEmailField.after(editAddressLink);
+                emailField.after(editAddressLink);
 
                 editAddressLink.on('click', function(event) {
                     event.preventDefault();
@@ -305,11 +309,11 @@ jQuery(document).ready(function($) {
         $('#address-validation-modal').hide();
     });
 
-    allFields.forEach(selector => {
+    billingAllFields.forEach(selector => {
         const element = $(selector);
         if (element.length) {
             element.on('change', () => {
-                handleAddressValidation(allFields, 'billing');
+                handleAddressValidation(billingAllFields, 'billing');
             });
 
             element.on('input', () => {
@@ -327,13 +331,13 @@ jQuery(document).ready(function($) {
         }
     });
 
-    shippingFields.forEach(selector => {
+    shippingAllFields.forEach(selector => {
         const element = $(selector);
         if (element.length) {
             element.on('change', () => {
                 const checkbox = $('#ship-to-different-address-checkbox');
                 if (checkbox.length && checkbox.is(':checked')) {
-                    handleAddressValidation(shippingFields, 'shipping');
+                    handleAddressValidation(shippingAllFields, 'shipping');
                 }
             });
 
@@ -356,7 +360,15 @@ jQuery(document).ready(function($) {
     if (checkbox.length) {
         checkbox.on('change', function() {
             const modal = $('#address-validation-modal');
-            if (!this.checked) {
+            if (this.checked) {
+                // Clear all shipping fields when checkbox is clicked
+                shippingAllFields.forEach(selector => {
+                    const input = $(selector);
+                    if (input.length) {
+                        input.val('');
+                    }
+                });
+            } else {
                 modal.hide(); // Hide modal if shipping is unchecked
             }
         });
