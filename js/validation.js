@@ -1,5 +1,24 @@
-document.addEventListener('DOMContentLoaded', function() {
+jQuery(document).ready(function($) {
     console.log('Address validation script loaded'); // Confirm script load
+
+    // Append CSS for the overlay
+    $('head').append(`
+        <style>
+            .input-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.5);
+                z-index: 10;
+                display: none;
+            }
+            .input-wrapper {
+                position: relative;
+            }
+        </style>
+    `);
 
     // Create and append the modal structure to the body
     const modalHTML = `
@@ -32,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
     `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    $('body').append(modalHTML);
 
     const apiUrl = smarty_params.api_url;
     const apiKey = smarty_params.api_key;
@@ -46,18 +65,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function allRequiredFieldsFilled(fields) {
         return fields.every(selector => {
-            const input = document.querySelector(selector);
-            return input && input.value;
+            const input = $(selector);
+            return input.length && input.val().trim();
         });
     }
 
     function handleAddressValidation(fields, addressType) {
         currentAddressType = addressType; // Update currentAddressType dynamically
         if (!bypassApiCall && allRequiredFieldsFilled(requiredFields)) {
-            const street = document.querySelector(fields[0]).value;
-            const city = document.querySelector(fields[1]).value;
-            const state = document.querySelector(fields[3]).value;
-            const zipcode = document.querySelector(fields[2]).value;
+            const street = $(fields[0]).val().trim();
+            const city = $(fields[1]).val().trim();
+            const state = $(fields[3]).val().trim();
+            const zipcode = $(fields[2]).val().trim();
 
             const requestUrl = `${apiUrl}?key=${apiKey}&street=${encodeURIComponent(street)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipcode=${encodeURIComponent(zipcode)}&match=invalid&candidates=10`;
 
@@ -74,23 +93,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(data => {
                     console.log('API response:', data);
-                    const modal = document.getElementById('address-validation-modal');
-                    const content = document.getElementById('address-validation-content');
-                    const apiColContainer = content.querySelector('.api-col-container');
-                    const validationFailedMessage = document.getElementById('validation-failed-message');
-                    const addressNotFoundMessage = document.getElementById('address-not-found-message');
-                    const failedFieldsList = document.getElementById('failed-fields-list');
+                    const modal = $('#address-validation-modal');
+                    const content = $('#address-validation-content');
+                    const apiColContainer = content.find('.api-col-container');
+                    const validationFailedMessage = $('#validation-failed-message');
+                    const addressNotFoundMessage = $('#address-not-found-message');
+                    const failedFieldsList = $('#failed-fields-list');
 
                     // Remove validation-failed class and data-validated attribute from all fields
                     allFields.forEach(selector => {
-                        const input = document.querySelector(selector);
-                        if (input) {
-                            input.classList.remove('validation-failed');
+                        const input = $(selector);
+                        if (input.length) {
+                            input.removeClass('validation-failed');
                             const wrapper = input.closest('.woocommerce-input-wrapper');
-                            if (wrapper) {
-                                wrapper.removeAttribute('data-validated');
+                            if (wrapper.length) {
+                                wrapper.removeAttr('data-validated');
+                                wrapper.find('.input-overlay').hide(); // Hide overlay
                             }
-                            input.removeAttribute('disabled');
                         }
                     });
 
@@ -98,180 +117,177 @@ document.addEventListener('DOMContentLoaded', function() {
                         const analysis = data[0].analysis;
                         if (analysis.footnotes && analysis.footnotes.startsWith('F')) {
                             // Show address not found message
-                            document.getElementById('modal-heading').textContent = 'Invalid Address';
-                            apiColContainer.style.display = 'none';
-                            validationFailedMessage.style.display = 'none';
-                            addressNotFoundMessage.style.display = 'block';
-                            modal.style.display = 'flex';
+                            $('#modal-heading').text('Invalid Address');
+                            apiColContainer.hide();
+                            validationFailedMessage.hide();
+                            addressNotFoundMessage.show();
+                            modal.show();
                         } else {
                             apiResponseData = data;
                             const components = data[0].components;
                             console.log('Validated Address:', components);  // Specifically log the validated address components
-                            document.getElementById('user-entered-address').innerHTML = `
+                            $('#user-entered-address').html(`
                                 <span class="modal-street">${street}</span>
                                 <span class="modal-city">${city}</span>
                                 <span class="modal-state">${state}</span>
                                 <span class="modal-zip">${zipcode}</span>
-                            `;
+                            `);
                             const secondaryAddress = components.secondary_designator
                                 ? `${components.secondary_designator} ${components.delivery_point}`
                                 : '';
-                            document.getElementById('api-suggested-address').innerHTML = `
+                            $('#api-suggested-address').html(`
                                 <span class="modal-street">${components.primary_number} ${components.street_name} ${components.street_suffix || ''}</span>
                                 ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
                                 <span class="modal-city">${components.city_name}</span>
                                 <span class="modal-state">${components.state_abbreviation}</span>
                                 <span class="modal-zip">${components.zipcode}</span>
                                 ${components.plus4_code ? `<span class="modal-zip-extended">-${components.plus4_code}</span>` : ''}
-                            `;
-                            document.getElementById('modal-heading').textContent = `Confirm ${addressType.charAt(0).toUpperCase() + addressType.slice(1)} Address`;
-                            apiColContainer.style.display = 'flex';
-                            validationFailedMessage.style.display = 'none';
-                            addressNotFoundMessage.style.display = 'none';
-                            modal.style.display = 'flex';
+                            `);
+                            $('#modal-heading').text(`Confirm ${addressType.charAt(0).toUpperCase() + addressType.slice(1)} Address`);
+                            apiColContainer.show();
+                            validationFailedMessage.hide();
+                            addressNotFoundMessage.hide();
+                            modal.show();
 
                             // Add data-validated attribute to wrapper of fields
                             allFields.forEach(selector => {
-                                const input = document.querySelector(selector);
-                                if (input && input.value) {
+                                const input = $(selector);
+                                if (input.length && input.val().trim()) {
                                     const wrapper = input.closest('.woocommerce-input-wrapper');
-                                    if (wrapper) {
-                                        wrapper.setAttribute('data-validated', 'true');
+                                    if (wrapper.length) {
+                                        wrapper.attr('data-validated', 'true');
+                                        if (!wrapper.find('.input-overlay').length) {
+                                            wrapper.append('<div class="input-overlay"></div>');
+                                        }
+                                        wrapper.find('.input-overlay').show(); // Show overlay
                                     }
-                                    input.setAttribute('disabled', 'true');
-                                    input.style.backgroundColor = '#f0f0f0'; // Gray out the input
                                 }
                             });
 
                             // Populate #billing_address_2 only if both secondary_designator and delivery_point are present
                             if (components.secondary_designator && components.delivery_point) {
-                                document.querySelector('#billing_address_2').value = secondaryAddress;
-                            }
-
-                            // Lock #billing_address_2 even if no value is present
-                            const billingAddress2 = document.querySelector('#billing_address_2');
-                            if (billingAddress2) {
-                                billingAddress2.setAttribute('disabled', 'true');
-                                billingAddress2.style.backgroundColor = '#f0f0f0'; // Gray out the input
+                                $('#billing_address_2').val(secondaryAddress);
                             }
                         }
                     } else {
                         console.log('Address validation failed:', data);
-                        document.getElementById('modal-heading').textContent = 'Invalid Address';
-                        apiColContainer.style.display = 'none';
-                        validationFailedMessage.style.display = 'block';
-                        addressNotFoundMessage.style.display = 'none';
-                        modal.style.display = 'flex';
+                        $('#modal-heading').text('Invalid Address');
+                        apiColContainer.hide();
+                        validationFailedMessage.show();
+                        addressNotFoundMessage.hide();
+                        modal.show();
 
                         // Highlight the fields that failed validation
                         requiredFields.forEach(selector => {
-                            const input = document.querySelector(selector);
-                            if (input) {
-                                input.classList.add('validation-failed');
+                            const input = $(selector);
+                            if (input.length) {
+                                input.addClass('validation-failed');
                             }
                         });
 
                         // Add list of failed fields to the modal
-                        failedFieldsList.innerHTML = requiredFields.map(selector => {
-                            const input = document.querySelector(selector);
-                            if (input && !input.value) {
+                        failedFieldsList.html(requiredFields.map(selector => {
+                            const input = $(selector);
+                            if (input.length && !input.val().trim()) {
                                 return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
                             }
                             return '';
-                        }).join('');
+                        }).join(''));
                     }
                 })
                 .catch(error => {
                     console.error('AJAX error:', error);
-                    document.getElementById('modal-heading').textContent = 'Invalid Address';
-                    const modal = document.getElementById('address-validation-modal');
-                    const content = document.getElementById('address-validation-content');
-                    const apiColContainer = content.querySelector('.api-col-container');
-                    const validationFailedMessage = document.getElementById('validation-failed-message');
-                    const addressNotFoundMessage = document.getElementById('address-not-found-message');
-                    const failedFieldsList = document.getElementById('failed-fields-list');
+                    $('#modal-heading').text('Invalid Address');
+                    const modal = $('#address-validation-modal');
+                    const content = $('#address-validation-content');
+                    const apiColContainer = content.find('.api-col-container');
+                    const validationFailedMessage = $('#validation-failed-message');
+                    const addressNotFoundMessage = $('#address-not-found-message');
+                    const failedFieldsList = $('#failed-fields-list');
 
-                    apiColContainer.style.display = 'none';
-                    validationFailedMessage.style.display = 'block';
-                    addressNotFoundMessage.style.display = 'none';
-                    modal.style.display = 'flex';
+                    apiColContainer.hide();
+                    validationFailedMessage.show();
+                    addressNotFoundMessage.hide();
+                    modal.show();
 
                     // Highlight the fields that failed validation
                     requiredFields.forEach(selector => {
-                        const input = document.querySelector(selector);
-                        if (input) {
-                            input.classList.add('validation-failed');
+                        const input = $(selector);
+                        if (input.length) {
+                            input.addClass('validation-failed');
                         }
                     });
 
                     // Add list of failed fields to the modal
-                    failedFieldsList.innerHTML = requiredFields.map(selector => {
-                        const input = document.querySelector(selector);
-                        if (input && !input.value) {
+                    failedFieldsList.html(requiredFields.map(selector => {
+                        const input = $(selector);
+                        if (input.length && !input.val().trim()) {
                             return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
                         }
                         return '';
-                    }).join('');
+                    }).join(''));
                 });
         } else {
             console.log(`${addressType} address fields are not completely filled.`);
         }
     }
 
-    document.getElementById('use-original-address').addEventListener('click', () => {
-        document.getElementById('address-validation-modal').style.display = 'none';
+    $('#use-original-address').on('click', () => {
+        $('#address-validation-modal').hide();
     });
 
-    document.getElementById('use-corrected-address').addEventListener('click', () => {
+    $('#use-corrected-address').on('click', () => {
         if (apiResponseData) {
             bypassApiCall = true;
 
             const components = apiResponseData[0].components;
             const addressFields = currentAddressType === 'billing' ? allFields : shippingFields;
 
-            document.querySelector(addressFields[0]).value = components.primary_number + ' ' + components.street_name + ' ' + (components.street_suffix || '');
+            $(addressFields[0]).val(`${components.primary_number} ${components.street_name} ${components.street_suffix || ''}`);
             const secondaryAddress = components.secondary_designator
                 ? `${components.secondary_designator} ${components.delivery_point}`
                 : '';
             if (components.secondary_designator && components.delivery_point) {
-                document.querySelector('#billing_address_2').value = secondaryAddress;
+                $('#billing_address_2').val(secondaryAddress);
             }
-            document.querySelector(addressFields[1]).value = components.city_name;
-            document.querySelector(addressFields[2]).value = components.zipcode + (components.plus4_code ? '-' + components.plus4_code : '');
-            const stateField = document.querySelector(addressFields[3]);
-            stateField.value = components.state_abbreviation;
-            stateField.dispatchEvent(new Event('change'));
+            $(addressFields[1]).val(components.city_name);
+            $(addressFields[2]).val(`${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`);
+            const stateField = $(addressFields[3]);
+            stateField.val(components.state_abbreviation);
+            stateField.trigger('change');
 
             // Add data-validated attribute to wrapper of fields
             addressFields.forEach(selector => {
-                const input = document.querySelector(selector);
-                if (input && input.value) {
+                const input = $(selector);
+                if (input.length && input.val().trim()) {
                     const wrapper = input.closest('.woocommerce-input-wrapper');
-                    if (wrapper) {
-                        wrapper.setAttribute('data-validated', 'true');
-                        input.setAttribute('disabled', 'true'); // Disable the input fields
-                        input.style.backgroundColor = '#f0f0f0'; // Gray out the input
+                    if (wrapper.length) {
+                        wrapper.attr('data-validated', 'true');
+                        if (!wrapper.find('.input-overlay').length) {
+                            wrapper.append('<div class="input-overlay"></div>');
+                        }
+                        wrapper.find('.input-overlay').show(); // Show overlay
                     }
                 }
             });
 
             setTimeout(() => {
                 bypassApiCall = false;
-                document.getElementById('address-validation-modal').style.display = 'none';
+                $('#address-validation-modal').hide();
             }, 100);
 
             // Insert the link to allow re-editing the address fields
-            const billingEmailField = document.getElementById('billing_email_field');
-            if (billingEmailField && !document.getElementById('edit-address-link')) {
-                const editAddressLink = document.createElement('a');
-                editAddressLink.id = 'edit-address-link';
-                editAddressLink.href = '#';
-                editAddressLink.textContent = 'Click here to update your address.';
-                editAddressLink.style.display = 'block';
-                editAddressLink.style.marginTop = '10px';
-                billingEmailField.insertAdjacentElement('afterend', editAddressLink);
+            const billingEmailField = $('#billing_email_field');
+            if (billingEmailField.length && !$('#edit-address-link').length) {
+                const editAddressLink = $('<a>', {
+                    id: 'edit-address-link',
+                    href: '#',
+                    text: 'Click here to update your address.',
+                    style: 'display: block; margin-top: 10px;'
+                });
+                billingEmailField.after(editAddressLink);
 
-                editAddressLink.addEventListener('click', function(event) {
+                editAddressLink.on('click', function(event) {
                     event.preventDefault();
                     location.reload();
                 });
@@ -279,28 +295,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('close-validation-modal').addEventListener('click', () => {
-        document.getElementById('address-validation-modal').style.display = 'none';
+    $('#close-validation-modal').on('click', () => {
+        $('#address-validation-modal').hide();
     });
 
-    document.getElementById('close-address-not-found-modal').addEventListener('click', () => {
-        document.getElementById('address-validation-modal').style.display = 'none';
+    $('#close-address-not-found-modal').on('click', () => {
+        $('#address-validation-modal').hide();
     });
 
     allFields.forEach(selector => {
-        const element = document.querySelector(selector);
-        if (element) {
-            element.addEventListener('change', () => {
+        const element = $(selector);
+        if (element.length) {
+            element.on('change', () => {
                 handleAddressValidation(allFields, 'billing');
             });
 
-            element.addEventListener('input', () => {
+            element.on('input', () => {
                 // Remove validation class and re-enable inputs when user starts typing
                 const wrapper = element.closest('.woocommerce-input-wrapper');
-                if (wrapper) {
-                    wrapper.removeAttribute('data-validated');
-                    element.removeAttribute('disabled');
-                    element.style.backgroundColor = ''; // Remove gray out
+                if (wrapper.length) {
+                    wrapper.removeAttr('data-validated');
+                    element.css('background-color', ''); // Remove gray out
+                    wrapper.find('.input-overlay').hide(); // Hide overlay
                 }
             });
         } else {
@@ -309,22 +325,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     shippingFields.forEach(selector => {
-        const element = document.querySelector(selector);
-        if (element) {
-            element.addEventListener('change', () => {
-                const checkbox = document.getElementById('ship-to-different-address-checkbox');
-                if (checkbox && checkbox.checked) {
+        const element = $(selector);
+        if (element.length) {
+            element.on('change', () => {
+                const checkbox = $('#ship-to-different-address-checkbox');
+                if (checkbox.length && checkbox.is(':checked')) {
                     handleAddressValidation(shippingFields, 'shipping');
                 }
             });
 
-            element.addEventListener('input', () => {
+            element.on('input', () => {
                 // Remove validation class and re-enable inputs when user starts typing
                 const wrapper = element.closest('.woocommerce-input-wrapper');
-                if (wrapper) {
-                    wrapper.removeAttribute('data-validated');
-                    element.removeAttribute('disabled');
-                    element.style.backgroundColor = ''; // Remove gray out
+                if (wrapper.length) {
+                    wrapper.removeAttr('data-validated');
+                    element.css('background-color', ''); // Remove gray out
+                    wrapper.find('.input-overlay').hide(); // Hide overlay
                 }
             });
         } else {
@@ -332,17 +348,105 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    const checkbox = document.getElementById('ship-to-different-address-checkbox');
-    if (checkbox) {
-        checkbox.addEventListener('change', function() {
-            const modal = document.getElementById('address-validation-modal');
+    const checkbox = $('#ship-to-different-address-checkbox');
+    if (checkbox.length) {
+        checkbox.on('change', function() {
+            const modal = $('#address-validation-modal');
             if (!this.checked) {
-                modal.style.display = 'none'; // Hide modal if shipping is unchecked
+                modal.hide(); // Hide modal if shipping is unchecked
             }
         });
     } else {
         console.error('Shipping address checkbox not found');
     }
+
+    // Function to ensure fields are populated correctly
+    function populateCheckoutFields() {
+        const billingFields = {
+            billing_address_1: '#billing_address_1',
+            billing_address_2: '#billing_address_2',
+            billing_city: '#billing_city',
+            billing_state: '#billing_state',
+            billing_postcode: '#billing_postcode'
+        };
+
+        const shippingFields = {
+            shipping_address_1: '#shipping_address_1',
+            shipping_address_2: '#shipping_address_2',
+            shipping_city: '#shipping_city',
+            shipping_state: '#shipping_state',
+            shipping_postcode: '#shipping_postcode'
+        };
+
+        // Update the Braintree fields with the current form values
+        for (let field in billingFields) {
+            const input = $(billingFields[field]);
+            if (input.length) {
+                wc_braintree_checkout_fields[field].value = input.val().trim();
+            }
+        }
+
+        const shipToDifferentAddress = $('#ship-to-different-address-checkbox');
+        if (shipToDifferentAddress.length && shipToDifferentAddress.is(':checked')) {
+            for (let field in shippingFields) {
+                const input = $(shippingFields[field]);
+                if (input.length) {
+                    wc_braintree_checkout_fields[field].value = input.val().trim();
+                }
+            }
+        }
+
+        // Log updated fields for debugging
+        console.log('Updated wc_braintree_checkout_fields:', wc_braintree_checkout_fields);
+    }
+
+    // Hook into the WooCommerce checkout place order process
+    $(document.body).on('checkout_place_order', function() {
+        console.log('checkout_place_order triggered');
+
+        // Populate fields before the form is submitted
+        populateCheckoutFields();
+
+        // Ensure fields are not disabled before submission
+        const fieldsToEnable = [
+            '#billing_address_1', '#billing_address_2', '#billing_city',
+            '#billing_state', '#billing_postcode',
+            '#shipping_address_1', '#shipping_address_2', '#shipping_city',
+            '#shipping_state', '#shipping_postcode'
+        ];
+
+        fieldsToEnable.forEach(selector => {
+            const input = $(selector);
+            if (input.length) {
+                input.removeAttr('disabled');
+            }
+        });
+
+        // Return true to allow the checkout process to continue
+        return true;
+    });
+
+    // Also hook into the beforeSend of the AJAX request to ensure the fields are enabled
+    $(document).ajaxSend(function(event, jqXHR, settings) {
+        if (settings.url === wc_checkout_params.checkout_url) {
+            console.log('ajaxSend triggered for checkout');
+            populateCheckoutFields();
+
+            const fieldsToEnable = [
+                '#billing_address_1', '#billing_address_2', '#billing_city',
+                '#billing_state', '#billing_postcode',
+                '#shipping_address_1', '#shipping_address_2', '#shipping_city',
+                '#shipping_state', '#shipping_postcode'
+            ];
+
+            fieldsToEnable.forEach(selector => {
+                const input = $(selector);
+                if (input.length) {
+                    input.removeAttr('disabled');
+                }
+            });
+        }
+    });
 
     console.log('Address validation script setup complete');
 });
