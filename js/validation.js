@@ -1,25 +1,6 @@
 jQuery(document).ready(function($) {
     console.log('Address validation script loaded'); // Confirm script load
 
-    // Append CSS for the overlay
-    $('head').append(`
-        <style>
-            .input-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.5);
-                z-index: 10;
-                display: none;
-            }
-            .input-wrapper {
-                position: relative;
-            }
-        </style>
-    `);
-
     // Create and append the modal structure to the body
     const modalHTML = `
         <div id="address-validation-modal" style="display: none;">
@@ -108,8 +89,8 @@ jQuery(document).ready(function($) {
                             const wrapper = input.closest('.woocommerce-input-wrapper');
                             if (wrapper.length) {
                                 wrapper.removeAttr('data-validated');
-                                wrapper.find('.input-overlay').hide(); // Hide overlay
                             }
+                            input.removeAttr('readonly'); // Remove readonly attribute
                         }
                     });
 
@@ -156,17 +137,22 @@ jQuery(document).ready(function($) {
                                     const wrapper = input.closest('.woocommerce-input-wrapper');
                                     if (wrapper.length) {
                                         wrapper.attr('data-validated', 'true');
-                                        if (!wrapper.find('.input-overlay').length) {
-                                            wrapper.append('<div class="input-overlay"></div>');
-                                        }
-                                        wrapper.find('.input-overlay').show(); // Show overlay
                                     }
+                                    input.attr('readonly', 'true'); // Set readonly attribute
+                                    input.css('background-color', '#f0f0f0'); // Gray out the input
                                 }
                             });
 
                             // Populate #billing_address_2 only if both secondary_designator and delivery_point are present
                             if (components.secondary_designator && components.delivery_point) {
                                 $('#billing_address_2').val(secondaryAddress);
+                            }
+
+                            // Lock #billing_address_2 even if no value is present
+                            const billingAddress2 = $('#billing_address_2');
+                            if (billingAddress2.length) {
+                                billingAddress2.attr('readonly', 'true');
+                                billingAddress2.css('background-color', '#f0f0f0'); // Gray out the input
                             }
                         }
                     } else {
@@ -222,7 +208,7 @@ jQuery(document).ready(function($) {
                     failedFieldsList.html(requiredFields.map(selector => {
                         const input = $(selector);
                         if (input.length && !input.val().trim()) {
-                            return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
+                            return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l.toUpperCase())}</li>`;
                         }
                         return '';
                     }).join(''));
@@ -263,10 +249,8 @@ jQuery(document).ready(function($) {
                     const wrapper = input.closest('.woocommerce-input-wrapper');
                     if (wrapper.length) {
                         wrapper.attr('data-validated', 'true');
-                        if (!wrapper.find('.input-overlay').length) {
-                            wrapper.append('<div class="input-overlay"></div>');
-                        }
-                        wrapper.find('.input-overlay').show(); // Show overlay
+                        input.attr('readonly', 'true'); // Set readonly attribute
+                        input.css('background-color', '#f0f0f0'); // Gray out the input
                     }
                 }
             });
@@ -315,8 +299,8 @@ jQuery(document).ready(function($) {
                 const wrapper = element.closest('.woocommerce-input-wrapper');
                 if (wrapper.length) {
                     wrapper.removeAttr('data-validated');
+                    element.removeAttr('readonly'); // Remove readonly attribute
                     element.css('background-color', ''); // Remove gray out
-                    wrapper.find('.input-overlay').hide(); // Hide overlay
                 }
             });
         } else {
@@ -339,8 +323,8 @@ jQuery(document).ready(function($) {
                 const wrapper = element.closest('.woocommerce-input-wrapper');
                 if (wrapper.length) {
                     wrapper.removeAttr('data-validated');
+                    element.removeAttr('readonly'); // Remove readonly attribute
                     element.css('background-color', ''); // Remove gray out
-                    wrapper.find('.input-overlay').hide(); // Hide overlay
                 }
             });
         } else {

@@ -125,21 +125,33 @@
     color: #F3716D !important;
 }
 
-.input-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(128, 128, 128, 0.8); /* Light gray color with opacity */
-    z-index: 10;
-
-    padding: 0.5rem 1rem;
-    border: 1px solid rgb(118,118,118);
-    border-radius: 4px;
+.readonly {
+    background-color: #f0f0f0; /* Gray background */
+    cursor: not-allowed !important; /* Cursor indicating non-editable */
+    user-select: none; /* Prevent text selection */
+    pointer-events: none; /* Disable pointer events */
+    color: #666; /* Optionally change text color */
 }
-.input-wrapper {
-    position: relative;
+
+/* Optional: Style the text input to look different when readonly */
+.readonly::placeholder {
+    color: #999; /* Placeholder text color */
+}
+
+.readonly::-webkit-input-placeholder { /* WebKit browsers */
+    color: #999; /* Placeholder text color */
+}
+
+.readonly:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color: #999; /* Placeholder text color */
+}
+
+.readonly::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color: #999; /* Placeholder text color */
+}
+
+.readonly:-ms-input-placeholder { /* Internet Explorer 10+ */
+    color: #999; /* Placeholder text color */
 }
 
 @media (max-width: 768px) {
