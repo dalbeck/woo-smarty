@@ -91,6 +91,8 @@ jQuery(document).ready(function($) {
                                 wrapper.removeAttr('data-validated');
                             }
                             input.removeAttr('readonly'); // Remove readonly attribute
+                            input.removeClass('readonly'); // Remove readonly class
+                            input.css('background-color', ''); // Reset background color
                         }
                     });
 
@@ -139,6 +141,7 @@ jQuery(document).ready(function($) {
                                         wrapper.attr('data-validated', 'true');
                                     }
                                     input.attr('readonly', 'true'); // Set readonly attribute
+                                    input.addClass('readonly'); // Add readonly class
                                     input.css('background-color', '#f0f0f0'); // Gray out the input
                                 }
                             });
@@ -152,6 +155,7 @@ jQuery(document).ready(function($) {
                             const billingAddress2 = $('#billing_address_2');
                             if (billingAddress2.length) {
                                 billingAddress2.attr('readonly', 'true');
+                                billingAddress2.addClass('readonly'); // Add readonly class
                                 billingAddress2.css('background-color', '#f0f0f0'); // Gray out the input
                             }
                         }
@@ -220,6 +224,19 @@ jQuery(document).ready(function($) {
 
     $('#use-original-address').on('click', () => {
         $('#address-validation-modal').hide();
+        // Remove data-validated attribute and readonly class from all fields
+        allFields.forEach(selector => {
+            const input = $(selector);
+            if (input.length) {
+                const wrapper = input.closest('.woocommerce-input-wrapper');
+                if (wrapper.length) {
+                    wrapper.removeAttr('data-validated');
+                }
+                input.removeAttr('readonly');
+                input.removeClass('readonly'); // Remove readonly class
+                input.css('background-color', ''); // Reset background color
+            }
+        });
     });
 
     $('#use-corrected-address').on('click', () => {
@@ -250,6 +267,7 @@ jQuery(document).ready(function($) {
                     if (wrapper.length) {
                         wrapper.attr('data-validated', 'true');
                         input.attr('readonly', 'true'); // Set readonly attribute
+                        input.addClass('readonly'); // Add readonly class
                         input.css('background-color', '#f0f0f0'); // Gray out the input
                     }
                 }
@@ -300,6 +318,7 @@ jQuery(document).ready(function($) {
                 if (wrapper.length) {
                     wrapper.removeAttr('data-validated');
                     element.removeAttr('readonly'); // Remove readonly attribute
+                    element.removeClass('readonly'); // Remove readonly class
                     element.css('background-color', ''); // Remove gray out
                 }
             });
@@ -324,6 +343,7 @@ jQuery(document).ready(function($) {
                 if (wrapper.length) {
                     wrapper.removeAttr('data-validated');
                     element.removeAttr('readonly'); // Remove readonly attribute
+                    element.removeClass('readonly'); // Remove readonly class
                     element.css('background-color', ''); // Remove gray out
                 }
             });
