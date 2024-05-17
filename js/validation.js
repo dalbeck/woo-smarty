@@ -520,5 +520,18 @@ jQuery(document).ready(function($) {
         }
     });
 
+    // Clear fields if the user is not logged in
+    if (typeof wc_checkout_params !== 'undefined' && !wc_checkout_params.is_logged_in) {
+        billingAllFields.concat(shippingAllFields).forEach(selector => {
+            const input = $(selector);
+            if (input.length) {
+                input.val('');
+                if (selector === '#billing_state' || selector === '#shipping_state') {
+                    input.prop('selectedIndex', 0); // Reset the select field
+                }
+            }
+        });
+    }
+
     console.log('Address validation script setup complete');
 });
