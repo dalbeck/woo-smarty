@@ -96,6 +96,12 @@ jQuery(document).ready(function($) {
                             input.removeAttr('readonly'); // Remove readonly attribute
                             input.removeClass('readonly'); // Remove readonly class
                             input.css('background-color', ''); // Reset background color
+                            if (selector === '#shipping_state' || selector === '#billing_state') {
+                                input.prop('disabled', false); // Enable the select field
+                                input.removeClass('readonly'); // Remove readonly class
+                                // Remove readonly class from select2 container
+                                input.siblings('.select2-container').find('span.selection').removeClass('readonly');
+                            }
                         }
                     });
 
@@ -146,6 +152,11 @@ jQuery(document).ready(function($) {
                                     input.attr('readonly', 'true'); // Set readonly attribute
                                     input.addClass('readonly'); // Add readonly class
                                     input.css('background-color', '#f0f0f0'); // Gray out the input
+                                    if (selector === '#shipping_state' || selector === '#billing_state') {
+                                        input.addClass('readonly'); // Add readonly class
+                                        // Add readonly class to select2 container
+                                        input.siblings('.select2-container').find('span.selection').addClass('readonly');
+                                    }
                                 }
                             });
 
@@ -160,15 +171,6 @@ jQuery(document).ready(function($) {
                                 address2.attr('readonly', 'true');
                                 address2.addClass('readonly'); // Add readonly class
                                 address2.css('background-color', '#f0f0f0'); // Gray out the input
-                            }
-
-                            // Apply readonly and similar styles to the state select field
-                            const stateField = $(fields[3]);
-                            if (stateField.length) {
-                                stateField.attr('readonly', 'true');
-                                stateField.addClass('readonly'); // Add readonly class
-                                stateField.css('background-color', '#f0f0f0'); // Gray out the input
-                                stateField.prop('disabled', true); // Disable the select field
                             }
 
                             // Insert the link to allow re-editing the address fields
@@ -193,7 +195,7 @@ jQuery(document).ready(function($) {
                                                 input.removeClass('readonly');
                                                 input.css('background-color', ''); // Remove gray out
                                                 if (selector === '#billing_state') {
-                                                    input.prop('disabled', false); // Enable the select field
+                                                    input.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly class from select2 container
                                                 }
                                             }
                                         });
@@ -205,7 +207,7 @@ jQuery(document).ready(function($) {
                                                 input.removeClass('readonly');
                                                 input.css('background-color', ''); // Remove gray out
                                                 if (selector === '#shipping_state') {
-                                                    input.prop('disabled', false); // Enable the select field
+                                                    input.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly class from select2 container
                                                 }
                                             }
                                         });
@@ -234,7 +236,7 @@ jQuery(document).ready(function($) {
                         failedFieldsList.html(requiredFields.map(selector => {
                             const input = $(selector);
                             if (input.length && !input.val().trim()) {
-                                return `<li>${selector.replace(`#${addressType}_`, '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
+                                return `<li>${selector.replace(`#${addressType}_`, '').replace('_', ' ').replace(/\b\w/g, l.toUpperCase())}</li>`;
                             }
                             return '';
                         }).join(''));
@@ -293,6 +295,7 @@ jQuery(document).ready(function($) {
                 input.css('background-color', ''); // Reset background color
                 if (selector.endsWith('_state')) {
                     input.prop('disabled', false); // Enable the select field
+                    input.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly class from select2 container
                 }
             }
         });
@@ -329,7 +332,8 @@ jQuery(document).ready(function($) {
                         input.addClass('readonly'); // Add readonly class
                         input.css('background-color', '#f0f0f0'); // Gray out the input
                         if (selector.endsWith('_state')) {
-                            input.prop('disabled', true); // Disable the select field
+                            input.addClass('readonly'); // Add readonly class
+                            input.siblings('.select2-container').find('span.selection').addClass('readonly'); // Add readonly class to select2 container
                         }
                     }
                 }
@@ -367,6 +371,7 @@ jQuery(document).ready(function($) {
                     element.css('background-color', ''); // Remove gray out
                     if (selector === '#billing_state') {
                         element.prop('disabled', false); // Enable the select field
+                        element.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly class from select2 container
                     }
                 }
             });
@@ -395,6 +400,7 @@ jQuery(document).ready(function($) {
                     element.css('background-color', ''); // Remove gray out
                     if (selector === '#shipping_state') {
                         element.prop('disabled', false); // Enable the select field
+                        element.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly class from select2 container
                     }
                 }
             });

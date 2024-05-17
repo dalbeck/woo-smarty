@@ -162,3 +162,12 @@
         margin-bottom: 30px;
     }
 }
+
+
+#user-entered-address, #api-suggested-address {
+    font-size: 0;
+}
+
+#user-entered-address span, #api-suggested-address span {
+    font-size: 16px;
+}
