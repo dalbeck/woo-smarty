@@ -1,0 +1,173 @@
+#address-validation-modal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#modal-heading {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.inner-modal {
+    background: #ffffff;
+    width: 80%;
+    max-width: 960px;
+    padding: 40px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border-radius: 8px;
+}
+
+.api-col-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.api-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    border-radius: 16px;
+    padding: 24px;
+    margin: 0 40px;
+}
+
+.api-col p {
+    margin-bottom: 0;
+}
+
+.api-col-1 {
+    border: 1px solid #ccc; /* Soft gray border for entered address */
+}
+
+#user-entered-address, #api-suggested-address {
+    padding: 10px;
+    margin-top: 8px; /* Space below the paragraph */
+    border-radius: 5px;
+    min-height: 100px; /* Ensures divs are visibly defined even if empty */
+    background: #fff; /* Ensures the background is white */
+}
+
+.api-col-2 {
+    border: 2px solid #F3716D; /* Highlighted border for suggested address */
+}
+
+#user-entered-address span, #api-suggested-address span {
+    display: block;
+}
+
+.modal-zip, .modal-zip-extended {
+    display: inline-block !important;
+}
+
+#api-suggested-address span {
+    /* font-weight: bold; */
+}
+
+.inner-modal button {
+    background-color: #F3716D;
+    color: #ffffff;
+    font-size: 16px;
+    padding: 12px 20px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.inner-modal button:hover {
+    background-color: #E8605A; /* Slightly darker shade for hover */
+}
+
+#validation-failed-message, #address-not-found-message {
+    text-align: center;
+}
+
+.validation-failed {
+    outline: 2px solid red !important;
+}
+
+.woocommerce-input-wrapper {
+    position: relative;
+}
+
+.woocommerce-input-wrapper[data-validated="true"]::after {
+    content: '';
+    background-image: url('/wp-content/plugins/smarty-address-validation/img/green-check.svg') !important;
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+}
+
+#edit-billing-address-link, #edit-shipping-address-link {
+    margin-bottom: 10px;
+    text-decoration: underline;
+    transition: all 0.2s ease-in-out;
+}
+
+#edit-billing-address-link:hover, #edit-shipping-address-link:hover {
+    color: #F3716D !important;
+}
+
+.readonly {
+    background-color: #f0f0f0; /* Gray background */
+    cursor: not-allowed !important; /* Cursor indicating non-editable */
+    user-select: none; /* Prevent text selection */
+    pointer-events: none; /* Disable pointer events */
+    color: #666; /* Optionally change text color */
+}
+
+/* Optional: Style the text input to look different when readonly */
+.readonly::placeholder {
+    color: #999; /* Placeholder text color */
+}
+
+.readonly::-webkit-input-placeholder { /* WebKit browsers */
+    color: #999; /* Placeholder text color */
+}
+
+.readonly:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color: #999; /* Placeholder text color */
+}
+
+.readonly::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color: #999; /* Placeholder text color */
+}
+
+.readonly:-ms-input-placeholder { /* Internet Explorer 10+ */
+    color: #999; /* Placeholder text color */
+}
+
+@media (max-width: 768px) {
+    .api-col-container {
+        flex-direction: column;
+    }
+    .api-col-1 {
+        margin-bottom: 30px;
+    }
+}
+
+
+#user-entered-address, #api-suggested-address {
+    font-size: 0;
+}
+
+#user-entered-address span, #api-suggested-address span {
+    font-size: 16px;
+}

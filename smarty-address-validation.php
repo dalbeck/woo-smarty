@@ -18,32 +18,48 @@ if ( !in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', 
     add_action( 'admin_notices', function() {
         echo '<div class="error"><p>This plugin requires WooCommerce to be installed and active.</p></div>';
     });
-    return; // Stop execution of the script
+    return;
 }
 
 function smarty_enqueue_scripts() {
-    wp_enqueue_script( 'smarty-validation-js', plugins_url( 'js/validation.js', __FILE__ ), array('jquery'), '1.0', true );
-    wp_enqueue_style( 'smarty-validation-css', plugins_url( 'css/style.css', __FILE__ ), array(), '1.0' );
+    if ( is_checkout() ) {
+        wp_enqueue_script('smarty-validation-js', plugins_url('js/validation.js', __FILE__), array(), '1.0', true);
+        wp_enqueue_style( 'smarty-validation-css', plugins_url( 'css/style.css', __FILE__ ), array(), '1.0' );
+    }
 }
 
 add_action( 'wp_enqueue_scripts', 'smarty_enqueue_scripts' );
 
-define('SMARTY_API_KEY', '23009612322313671');
-define('SMARTY_AUTH_ID', '48f7f162-42ba-0878-5910-a746a172fa2d');
-define('SMARTY_AUTH_TOKEN', '40Pmy8WbSNUcfhFlP9bl');
+add_filter('default_checkout_billing_country', 'change_default_checkout_country');
+add_filter('default_checkout_billing_state', 'change_default_checkout_state');
+add_filter('default_checkout_shipping_country', 'change_default_checkout_country');
+add_filter('default_checkout_shipping_state', 'change_default_checkout_state');
 
-$api_key = defined('SMARTY_API_KEY') ? SMARTY_API_KEY : '';
-$smarty_auth_id = defined('SMARTY_AUTH_ID') ? SMARTY_AUTH_ID : '';
-$smarty_auth_token = defined('SMARTY_AUTH_TOKEN') ? SMARTY_AUTH_TOKEN : '';
-
-function smarty_checkout_field_scripts()
+/**
+ * Changes the default checkout country in WooCommerce.
+ *
+ * This function is used to prevent WooCommerce from auto-filling the country field during checkout.
+ * It returns an empty string, effectively setting the default country to none.
+ *
+ * @return string Empty string to set the default country to none.
+ */
+function change_default_checkout_country()
 {
-    if (is_checkout()) {
-        wp_enqueue_script('smarty-validation-js');
-        wp_localize_script('smarty-validation-js', 'smarty_params', array(
-            'api_url' => 'https://us-street.api.smartystreets.com/street-address',
-            'api_key' => defined('SMARTY_API_KEY') ? SMARTY_API_KEY : '' // Ensure your API key is correctly defined and secured
-        ));
-    }
+    return ''; // country code
 }
-add_action('woocommerce_after_checkout_form', 'smarty_checkout_field_scripts');
+
+/**
+ * Changes the default checkout state in WooCommerce.
+ *
+ * This function is used to prevent WooCommerce from auto-filling the state field during checkout.
+ * It returns an empty string, effectively setting the default state to none.
+ *
+ * @return string Empty string to set the default state to none.
+ */
+function change_default_checkout_state()
+{
+    return ''; // state code
+}
+
+include_once(dirname(__FILE__) . '/lib/smarty-api-functions.php');
+include_once(dirname(__FILE__) . '/lib/smarty-settings.php');
