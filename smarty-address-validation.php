@@ -32,6 +32,8 @@ add_action( 'wp_enqueue_scripts', 'smarty_enqueue_scripts' );
 
 add_filter('default_checkout_billing_country', 'change_default_checkout_country');
 add_filter('default_checkout_billing_state', 'change_default_checkout_state');
+add_filter('default_checkout_shipping_country', 'change_default_checkout_country');
+add_filter('default_checkout_shipping_state', 'change_default_checkout_state');
 
 /**
  * Changes the default checkout country in WooCommerce.
