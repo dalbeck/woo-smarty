@@ -161,6 +161,58 @@ jQuery(document).ready(function($) {
                                 address2.addClass('readonly'); // Add readonly class
                                 address2.css('background-color', '#f0f0f0'); // Gray out the input
                             }
+
+                            // Apply readonly and similar styles to the state select field
+                            const stateField = $(fields[3]);
+                            if (stateField.length) {
+                                stateField.attr('readonly', 'true');
+                                stateField.addClass('readonly'); // Add readonly class
+                                stateField.css('background-color', '#f0f0f0'); // Gray out the input
+                                stateField.prop('disabled', true); // Disable the select field
+                            }
+
+                            // Insert the link to allow re-editing the address fields
+                            const editAddressLinkId = addressType === 'billing' ? '#edit-billing-address-link' : '#edit-shipping-address-link';
+                            const container = addressType === 'billing' ? $('#billing_email_field') : $('.woocommerce-shipping-fields');
+                            if (container.length && !$(editAddressLinkId).length) {
+                                const editAddressLink = $('<a>', {
+                                    id: editAddressLinkId.substring(1),
+                                    href: '#',
+                                    text: `Click here to update your ${addressType} address.`,
+                                    style: 'display: block; margin-top: 10px;'
+                                });
+                                container.after(editAddressLink);
+
+                                editAddressLink.on('click', function(event) {
+                                    event.preventDefault();
+                                    if (addressType === 'billing') {
+                                        billingAllFields.forEach(selector => {
+                                            const input = $(selector);
+                                            if (input.length) {
+                                                input.removeAttr('readonly');
+                                                input.removeClass('readonly');
+                                                input.css('background-color', ''); // Remove gray out
+                                                if (selector === '#billing_state') {
+                                                    input.prop('disabled', false); // Enable the select field
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        shippingAllFields.forEach(selector => {
+                                            const input = $(selector);
+                                            if (input.length) {
+                                                input.removeAttr('readonly');
+                                                input.removeClass('readonly');
+                                                input.css('background-color', ''); // Remove gray out
+                                                if (selector === '#shipping_state') {
+                                                    input.prop('disabled', false); // Enable the select field
+                                                }
+                                            }
+                                        });
+                                    }
+                                    $(editAddressLinkId).remove();
+                                });
+                            }
                         }
                     } else {
                         console.log('Address validation failed:', data);
@@ -182,7 +234,7 @@ jQuery(document).ready(function($) {
                         failedFieldsList.html(requiredFields.map(selector => {
                             const input = $(selector);
                             if (input.length && !input.val().trim()) {
-                                return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
+                                return `<li>${selector.replace(`#${addressType}_`, '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
                             }
                             return '';
                         }).join(''));
@@ -215,7 +267,7 @@ jQuery(document).ready(function($) {
                     failedFieldsList.html(requiredFields.map(selector => {
                         const input = $(selector);
                         if (input.length && !input.val().trim()) {
-                            return `<li>${selector.replace('#billing_', '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
+                            return `<li>${selector.replace(`#${addressType}_`, '').replace('_', ' ').replace(/\b\w/g, l.toUpperCase())}</li>`;
                         }
                         return '';
                     }).join(''));
@@ -239,6 +291,9 @@ jQuery(document).ready(function($) {
                 input.removeAttr('readonly');
                 input.removeClass('readonly'); // Remove readonly class
                 input.css('background-color', ''); // Reset background color
+                if (selector.endsWith('_state')) {
+                    input.prop('disabled', false); // Enable the select field
+                }
             }
         });
     });
@@ -273,6 +328,9 @@ jQuery(document).ready(function($) {
                         input.attr('readonly', 'true'); // Set readonly attribute
                         input.addClass('readonly'); // Add readonly class
                         input.css('background-color', '#f0f0f0'); // Gray out the input
+                        if (selector.endsWith('_state')) {
+                            input.prop('disabled', true); // Disable the select field
+                        }
                     }
                 }
             });
@@ -281,23 +339,6 @@ jQuery(document).ready(function($) {
                 bypassApiCall = false;
                 $('#address-validation-modal').hide();
             }, 100);
-
-            // Insert the link to allow re-editing the address fields
-            const emailField = currentAddressType === 'billing' ? $('#billing_email_field') : $('#shipping_email_field');
-            if (emailField.length && !$('#edit-address-link').length) {
-                const editAddressLink = $('<a>', {
-                    id: 'edit-address-link',
-                    href: '#',
-                    text: 'Click here to update your address.',
-                    style: 'display: block; margin-top: 10px;'
-                });
-                emailField.after(editAddressLink);
-
-                editAddressLink.on('click', function(event) {
-                    event.preventDefault();
-                    location.reload();
-                });
-            }
         }
     });
 
@@ -324,6 +365,9 @@ jQuery(document).ready(function($) {
                     element.removeAttr('readonly'); // Remove readonly attribute
                     element.removeClass('readonly'); // Remove readonly class
                     element.css('background-color', ''); // Remove gray out
+                    if (selector === '#billing_state') {
+                        element.prop('disabled', false); // Enable the select field
+                    }
                 }
             });
         } else {
@@ -349,6 +393,9 @@ jQuery(document).ready(function($) {
                     element.removeAttr('readonly'); // Remove readonly attribute
                     element.removeClass('readonly'); // Remove readonly class
                     element.css('background-color', ''); // Remove gray out
+                    if (selector === '#shipping_state') {
+                        element.prop('disabled', false); // Enable the select field
+                    }
                 }
             });
         } else {
@@ -366,6 +413,9 @@ jQuery(document).ready(function($) {
                     const input = $(selector);
                     if (input.length) {
                         input.val('');
+                        if (selector === '#shipping_state') {
+                            input.prop('selectedIndex', 0); // Reset the select field
+                        }
                     }
                 });
             } else {

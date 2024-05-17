@@ -115,13 +115,13 @@
     height: 16px;
 }
 
-#edit-address-link {
+#edit-billing-address-link, #edit-shipping-address-link {
     margin-bottom: 10px;
     text-decoration: underline;
     transition: all 0.2s ease-in-out;
 }
 
-#edit-address-link:hover {
+#edit-billing-address-link:hover, #edit-shipping-address-link:hover {
     color: #F3716D !important;
 }
 
