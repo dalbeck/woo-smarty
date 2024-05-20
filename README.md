@@ -21,6 +21,18 @@ The Smarty Address Validation for WooCommerce plugin is designed to enhance the 
 
 Once the plugin is activated, it will automatically integrate Smarty address validation into your WooCommerce checkout fields.
 
+## Development
+
+- `nvm use 20`
+- `npm install`
+- Dev Mode: `npm start`
+- Production Build: `npm run build` (This will create a dist folder with the bundled and minified files.)
+
+- modal.js: Contains the modal creation and event handlers for modal buttons.
+- validation.js: Handles the address validation logic, including API calls and validation results.
+- events.js: Contains event listeners for billing and shipping fields, as well as handling changes in the "Ship to a different address" checkbox.
+- utils.js: Contains utility functions for populating checkout fields and handling WooCommerce hooks to ensure fields are correctly populated and enabled during checkout.
+
 ## Author
 
 Danny Albeck - [https://github.com/dalbeck](https://github.com/dalbeck)
