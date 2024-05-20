@@ -58,13 +58,14 @@ jQuery(document).ready(function($) {
 
         if (!bypassApiCall && allRequiredFieldsFilled(requiredFields)) {
             const street = $(fields[0]).val().trim();
+            const street2 = $(fields[4]).val().trim(); // Address line 2 (e.g., apartment number)
             const city = $(fields[1]).val().trim();
             const state = $(fields[3]).val().trim();
             const zipcode = $(fields[2]).val().trim();
 
-            const requestUrl = `${apiUrl}?key=${apiKey}&street=${encodeURIComponent(street)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipcode=${encodeURIComponent(zipcode)}&match=invalid&candidates=10`;
+            const requestUrl = `${apiUrl}?key=${apiKey}&street=${encodeURIComponent(street)}&street2=${encodeURIComponent(street2)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipcode=${encodeURIComponent(zipcode)}&match=invalid&candidates=10`;
 
-            console.log(`Validating ${addressType} address:`, { street, city, state, zipcode });
+            console.log(`Validating ${addressType} address:`, { street, street2, city, state, zipcode });
             console.log('Request URL:', requestUrl);
 
             fetch(requestUrl)
@@ -119,13 +120,13 @@ jQuery(document).ready(function($) {
                             const components = data[0].components;
                             console.log('Validated Address:', components);  // Specifically log the validated address components
                             $('#user-entered-address').html(`
-                                <span class="modal-street">${street}</span>
+                                <span class="modal-street">${street} ${street2}</span>
                                 <span class="modal-city">${city}</span>
                                 <span class="modal-state">${state}</span>
                                 <span class="modal-zip">${zipcode}</span>
                             `);
                             const secondaryAddress = components.secondary_designator
-                                ? `${components.secondary_designator} ${components.delivery_point}`
+                                ? `${components.secondary_designator} ${components.secondary_number}`
                                 : '';
                             $('#api-suggested-address').html(`
                                 <span class="modal-street">${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}</span>
@@ -160,8 +161,8 @@ jQuery(document).ready(function($) {
                                 }
                             });
 
-                            // Populate address_2 only if both secondary_designator and delivery_point are present
-                            if (components.secondary_designator && components.delivery_point) {
+                            // Populate address_2 only if both secondary_designator and secondary_number are present
+                            if (components.secondary_designator && components.secondary_number) {
                                 $(fields[4]).val(secondaryAddress);
                             }
 
@@ -310,9 +311,9 @@ jQuery(document).ready(function($) {
 
             $(addressFields[0]).val(`${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`);
             const secondaryAddress = components.secondary_designator
-                ? `${components.secondary_designator} ${components.delivery_point}`
+                ? `${components.secondary_designator} ${components.secondary_number}`
                 : '';
-            if (components.secondary_designator && components.delivery_point) {
+            if (components.secondary_designator && components.secondary_number) {
                 $(addressFields[4]).val(secondaryAddress);
             }
             $(addressFields[1]).val(components.city_name);
