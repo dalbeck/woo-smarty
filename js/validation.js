@@ -128,7 +128,9 @@ jQuery(document).ready(function($) {
                             const secondaryAddress = components.secondary_designator
                                 ? `${components.secondary_designator} ${components.secondary_number}`
                                 : '';
+                            const urbanization = components.urbanization || '';
                             $('#api-suggested-address').html(`
+                                ${urbanization ? `<span class="modal-urbanization">${urbanization}</span>` : ''}
                                 <span class="modal-street">${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}</span>
                                 ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
                                 <span class="modal-city">${components.city_name}</span>
@@ -162,9 +164,18 @@ jQuery(document).ready(function($) {
                             });
 
                             // Populate address_2 only if both secondary_designator and secondary_number are present
+                            let address2Value = '';
                             if (components.secondary_designator && components.secondary_number) {
-                                $(fields[4]).val(secondaryAddress);
+                                address2Value = `${components.secondary_designator} ${components.secondary_number}`;
                             }
+
+                            // Add urbanization to address_2 if present
+                            if (urbanization) {
+                                address2Value = `${urbanization} ${address2Value}`.trim();
+                            }
+
+                            // Set the value for address_2
+                            $(fields[4]).val(address2Value);
 
                             // Lock address_2 even if no value is present
                             const address2 = $(fields[4]);
@@ -313,9 +324,13 @@ jQuery(document).ready(function($) {
             const secondaryAddress = components.secondary_designator
                 ? `${components.secondary_designator} ${components.secondary_number}`
                 : '';
-            if (components.secondary_designator && components.secondary_number) {
-                $(addressFields[4]).val(secondaryAddress);
+            const urbanization = components.urbanization || '';
+            let address2Value = secondaryAddress;
+
+            if (urbanization) {
+                address2Value = `${urbanization} ${address2Value}`.trim();
             }
+            $(addressFields[4]).val(address2Value);
             $(addressFields[1]).val(components.city_name);
             $(addressFields[2]).val(`${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`);
             const stateField = $(addressFields[3]);
