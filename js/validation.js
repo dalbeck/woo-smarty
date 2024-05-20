@@ -128,7 +128,7 @@ jQuery(document).ready(function($) {
                                 ? `${components.secondary_designator} ${components.delivery_point}`
                                 : '';
                             $('#api-suggested-address').html(`
-                                <span class="modal-street">${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''}</span>
+                                <span class="modal-street">${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_postdirection || ''} ${components.street_suffix || ''}</span>
                                 ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
                                 <span class="modal-city">${components.city_name}</span>
                                 <span class="modal-state">${components.state_abbreviation}</span>
@@ -236,7 +236,7 @@ jQuery(document).ready(function($) {
                         failedFieldsList.html(requiredFields.map(selector => {
                             const input = $(selector);
                             if (input.length && !input.val().trim()) {
-                                return `<li>${selector.replace(`#${addressType}_`, '').replace('_', ' ').replace(/\b\w/g, l.toUpperCase())}</li>`;
+                                return `<li>${selector.replace(`#${addressType}_`, '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
                             }
                             return '';
                         }).join(''));
@@ -269,7 +269,7 @@ jQuery(document).ready(function($) {
                     failedFieldsList.html(requiredFields.map(selector => {
                         const input = $(selector);
                         if (input.length && !input.val().trim()) {
-                            return `<li>${selector.replace(`#${addressType}_`, '').replace('_', ' ').replace(/\b\w/g, l.toUpperCase())}</li>`;
+                            return `<li>${selector.replace(`#${addressType}_`, '').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>`;
                         }
                         return '';
                     }).join(''));
@@ -308,7 +308,7 @@ jQuery(document).ready(function($) {
             const components = apiResponseData[0].components;
             const addressFields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
 
-            $(addressFields[0]).val(`${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''}`);
+            $(addressFields[0]).val(`${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_postdirection || ''} ${components.street_suffix || ''}`);
             const secondaryAddress = components.secondary_designator
                 ? `${components.secondary_designator} ${components.delivery_point}`
                 : '';
