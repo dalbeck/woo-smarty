@@ -57,11 +57,13 @@ jQuery(document).ready(function($) {
         const requiredFields = addressType === 'billing' ? billingRequiredFields : shippingRequiredFields;
 
         if (!bypassApiCall && allRequiredFieldsFilled(requiredFields)) {
-            const street = $(fields[0]).val().trim();
+            let street = $(fields[0]).val().trim();
             const street2 = $(fields[4]).val().trim(); // Address line 2 (e.g., apartment number)
             const city = $(fields[1]).val().trim();
             const state = $(fields[3]).val().trim();
             const zipcode = $(fields[2]).val().trim();
+
+            const enteredStreet = street;
 
             const requestUrl = `${apiUrl}?key=${apiKey}&street=${encodeURIComponent(street)}&street2=${encodeURIComponent(street2)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipcode=${encodeURIComponent(zipcode)}&match=invalid&candidates=10`;
 
@@ -108,6 +110,8 @@ jQuery(document).ready(function($) {
 
                     if (data.length > 0 && data[0].components) {
                         const analysis = data[0].analysis;
+                        const metadata = data[0].metadata;
+                        console.log('Detected record_type:', metadata.record_type);
                         if (analysis.footnotes && analysis.footnotes.startsWith('F')) {
                             // Show address not found message
                             $('#modal-heading').text('Invalid Address');
@@ -120,18 +124,27 @@ jQuery(document).ready(function($) {
                             const components = data[0].components;
                             console.log('Validated Address:', components);  // Specifically log the validated address components
                             $('#user-entered-address').html(`
-                                <span class="modal-street">${street} ${street2}</span>
+                                <span class="modal-street">${enteredStreet} ${street2}</span>
                                 <span class="modal-city">${city}</span>
                                 <span class="modal-state">${state}</span>
                                 <span class="modal-zip">${zipcode}</span>
                             `);
+
+                            // Determine the correct street format
+                            let suggestedStreet = '';
+                            if (metadata.record_type === 'P') {
+                                suggestedStreet = `${components.street_name} ${components.primary_number}`;
+                            } else {
+                                suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
+                            }
+
                             const secondaryAddress = components.secondary_designator
                                 ? `${components.secondary_designator} ${components.secondary_number}`
                                 : '';
                             const urbanization = components.urbanization || '';
                             $('#api-suggested-address').html(`
                                 ${urbanization ? `<span class="modal-urbanization">${urbanization}</span>` : ''}
-                                <span class="modal-street">${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}</span>
+                                <span class="modal-street">${suggestedStreet}</span>
                                 ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
                                 <span class="modal-city">${components.city_name}</span>
                                 <span class="modal-state">${components.state_abbreviation}</span>
@@ -318,9 +331,17 @@ jQuery(document).ready(function($) {
             bypassApiCall = true;
 
             const components = apiResponseData[0].components;
+            const metadata = apiResponseData[0].metadata;
             const addressFields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
 
-            $(addressFields[0]).val(`${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`);
+            let suggestedStreet = '';
+            if (metadata.record_type === 'P') {
+                suggestedStreet = `${components.street_name} ${components.primary_number}`;
+            } else {
+                suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
+            }
+
+            $(addressFields[0]).val(suggestedStreet);
             const secondaryAddress = components.secondary_designator
                 ? `${components.secondary_designator} ${components.secondary_number}`
                 : '';
