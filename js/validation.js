@@ -7,6 +7,10 @@ jQuery(document).ready(function($) {
             <div class="inner-modal">
                 <h4 id="modal-heading">Confirm Address</h4>
                 <div id="address-validation-content">
+                    <div id="missing-apartment-number-message" style="display: none;">
+                        <p>We noticed you provided an address <strong>without</strong> an apartment/unit/building number. Would you like to re-enter your address to provide those details?</p>
+                        <button id="reenter-address">Yes, re-enter address</button>
+                    </div>
                     <div class="api-col-container" style="display: none;">
                         <div class="api-col api-col-1">
                             <p><strong>Your Entered:</strong></p>
@@ -27,10 +31,6 @@ jQuery(document).ready(function($) {
                     <div id="address-not-found-message" style="display: none;">
                         <p>Address not found. The address, exactly as submitted, could not be found in the city, state, or ZIP Code provided. Either the primary number is missing, the street is missing, or the street is too badly misspelled to understand.</p>
                         <button id="close-address-not-found-modal">Close</button>
-                    </div>
-                    <div id="missing-apartment-number-message" style="display: none;">
-                        <p>We noticed you provided an address without an apartment/unit/building number. Would you like to re-enter your address to provide those details?</p>
-                        <button id="reenter-address">Yes, re-enter address</button>
                     </div>
                 </div>
             </div>

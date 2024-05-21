@@ -174,8 +174,11 @@
 
 
 #missing-apartment-number-message {
+    border-bottom: 1px solid #e3e3e3;
     text-align: center;
     margin: 0 auto;
     margin-top: 30px;
+    margin-bottom: 30px;
+    padding-bottom: 30px;
     width: 75%;
 }
