@@ -111,6 +111,7 @@ jQuery(document).ready(function($) {
                     if (data.length > 0 && data[0].components) {
                         const analysis = data[0].analysis;
                         const metadata = data[0].metadata;
+                        console.log('Detected zip_type:', metadata.zip_type);
                         console.log('Detected record_type:', metadata.record_type);
                         if (analysis.footnotes && analysis.footnotes.startsWith('F')) {
                             // Show address not found message
@@ -122,6 +123,7 @@ jQuery(document).ready(function($) {
                         } else {
                             apiResponseData = data;
                             const components = data[0].components;
+                            const deliveryLine1 = data[0].delivery_line_1;
                             console.log('Validated Address:', components);  // Specifically log the validated address components
                             $('#user-entered-address').html(`
                                 <span class="modal-street">${enteredStreet} ${street2}</span>
@@ -132,7 +134,9 @@ jQuery(document).ready(function($) {
 
                             // Determine the correct street format
                             let suggestedStreet = '';
-                            if (metadata.record_type === 'P') {
+                            if (metadata.zip_type === 'Military') {
+                                suggestedStreet = `${deliveryLine1}`;
+                            } else if (metadata.record_type === 'P') {
                                 suggestedStreet = `${components.street_name} ${components.primary_number}`;
                             } else {
                                 suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
@@ -332,10 +336,13 @@ jQuery(document).ready(function($) {
 
             const components = apiResponseData[0].components;
             const metadata = apiResponseData[0].metadata;
+            const deliveryLine1 = apiResponseData[0].delivery_line_1;
             const addressFields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
 
             let suggestedStreet = '';
-            if (metadata.record_type === 'P') {
+            if (metadata.zip_type === 'Military') {
+                suggestedStreet = `${deliveryLine1}`;
+            } else if (metadata.record_type === 'P') {
                 suggestedStreet = `${components.street_name} ${components.primary_number}`;
             } else {
                 suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
