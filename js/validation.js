@@ -28,6 +28,10 @@ jQuery(document).ready(function($) {
                         <p>Address not found. The address, exactly as submitted, could not be found in the city, state, or ZIP Code provided. Either the primary number is missing, the street is missing, or the street is too badly misspelled to understand.</p>
                         <button id="close-address-not-found-modal">Close</button>
                     </div>
+                    <div id="missing-apartment-number-message" style="display: none;">
+                        <p>We noticed you provided an address without an apartment/unit/building number. Would you like to re-enter your address to provide those details?</p>
+                        <button id="reenter-address">Yes, re-enter address</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -85,6 +89,7 @@ jQuery(document).ready(function($) {
                     const apiColContainer = content.find('.api-col-container');
                     const validationFailedMessage = $('#validation-failed-message');
                     const addressNotFoundMessage = $('#address-not-found-message');
+                    const missingApartmentNumberMessage = $('#missing-apartment-number-message');
                     const failedFieldsList = $('#failed-fields-list');
 
                     // Remove validation-failed class and data-validated attribute from all fields
@@ -159,6 +164,15 @@ jQuery(document).ready(function($) {
                             apiColContainer.show();
                             validationFailedMessage.hide();
                             addressNotFoundMessage.hide();
+
+                            // Check if the record_type is 'H' and the secondary address is missing
+                            if (metadata.record_type === 'H' && !street2) {
+                                console.log('Detected record_type H with missing apartment/unit number');
+                                $('#missing-apartment-number-message').show();
+                            } else {
+                                $('#missing-apartment-number-message').hide();
+                            }
+
                             modal.show();
 
                             // Add data-validated attribute to wrapper of fields
@@ -279,11 +293,13 @@ jQuery(document).ready(function($) {
                     const apiColContainer = content.find('.api-col-container');
                     const validationFailedMessage = $('#validation-failed-message');
                     const addressNotFoundMessage = $('#address-not-found-message');
+                    const missingApartmentNumberMessage = $('#missing-apartment-number-message');
                     const failedFieldsList = $('#failed-fields-list');
 
                     apiColContainer.hide();
                     validationFailedMessage.show();
                     addressNotFoundMessage.hide();
+                    missingApartmentNumberMessage.hide();
                     modal.show();
 
                     // Highlight the fields that failed validation
@@ -396,6 +412,28 @@ jQuery(document).ready(function($) {
 
     $('#close-address-not-found-modal').on('click', () => {
         $('#address-validation-modal').hide();
+    });
+
+    $('#reenter-address').on('click', () => {
+        $('#address-validation-modal').hide();
+        // Remove data-validated attribute and readonly class from current address type fields
+        const fields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
+        fields.forEach(selector => {
+            const input = $(selector);
+            if (input.length) {
+                const wrapper = input.closest('.woocommerce-input-wrapper');
+                if (wrapper.length) {
+                    wrapper.removeAttr('data-validated');
+                }
+                input.removeAttr('readonly');
+                input.removeClass('readonly'); // Remove readonly class
+                input.css('background-color', ''); // Reset background color
+                if (selector.endsWith('_state')) {
+                    input.prop('disabled', false); // Enable the select field
+                    input.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly class from select2 container
+                }
+            }
+        });
     });
 
     billingAllFields.forEach(selector => {
