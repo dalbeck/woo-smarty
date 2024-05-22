@@ -182,3 +182,16 @@
     padding-bottom: 30px;
     width: 75%;
 }
+
+#apartment-number-input {
+    padding: 0.5rem 1rem;
+    border: 1px solid rgb(118,118,118);
+    border-radius: 4px;
+}
+
+#no-apartment-number {
+    display: block;
+    margin-top: 10px;
+    font-weight: 700;
+    text-align: center
+}

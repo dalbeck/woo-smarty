@@ -6,11 +6,13 @@ jQuery(document).ready(function($) {
         <div id="address-validation-modal" style="display: none;">
             <div class="inner-modal">
                 <h4 id="modal-heading">Confirm Address</h4>
+                <div id="missing-apartment-number-message" style="display: none;">
+                    <p>You forgot to enter your apartment or suite #. Please enter it here:</p>
+                    <input type="text" id="apartment-number-input" placeholder="Apartment/Suite Number" />
+                    <button id="submit-apartment-number">Submit</button>
+                    <a href="#" id="no-apartment-number">I do not have one.</a>
+                </div>
                 <div id="address-validation-content">
-                    <div id="missing-apartment-number-message" style="display: none;">
-                        <p>We noticed you provided an address <strong>without</strong> an apartment/unit/building number. Would you like to re-enter your address to provide those details?</p>
-                        <button id="reenter-address">Yes, re-enter address</button>
-                    </div>
                     <div class="api-col-container" style="display: none;">
                         <div class="api-col api-col-1">
                             <p><strong>Your Entered:</strong></p>
@@ -43,6 +45,7 @@ jQuery(document).ready(function($) {
     let apiResponseData;
     let bypassApiCall = false;
     let currentAddressType = 'billing'; // Default to billing, will be updated dynamically
+    let isMissingApartmentNumber = false;
 
     const billingRequiredFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state'];
     const billingAllFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state', '#billing_address_2'];
@@ -89,7 +92,6 @@ jQuery(document).ready(function($) {
                     const apiColContainer = content.find('.api-col-container');
                     const validationFailedMessage = $('#validation-failed-message');
                     const addressNotFoundMessage = $('#address-not-found-message');
-                    const missingApartmentNumberMessage = $('#missing-apartment-number-message');
                     const failedFieldsList = $('#failed-fields-list');
 
                     // Remove validation-failed class and data-validated attribute from all fields
@@ -118,6 +120,16 @@ jQuery(document).ready(function($) {
                         const metadata = data[0].metadata;
                         console.log('Detected zip_type:', metadata.zip_type);
                         console.log('Detected record_type:', metadata.record_type);
+
+                        // Check if the record_type is 'H' and the secondary address is missing
+                        if (metadata.record_type === 'H' && !street2 && !isMissingApartmentNumber) {
+                            console.log('Detected record_type H with missing apartment/unit number');
+                            $('#missing-apartment-number-message').show();
+                            $('#address-validation-content').hide();
+                            $('#address-validation-modal').show();
+                            return;
+                        }
+
                         if (analysis.footnotes && analysis.footnotes.startsWith('F')) {
                             // Show address not found message
                             $('#modal-heading').text('Invalid Address');
@@ -164,14 +176,6 @@ jQuery(document).ready(function($) {
                             apiColContainer.show();
                             validationFailedMessage.hide();
                             addressNotFoundMessage.hide();
-
-                            // Check if the record_type is 'H' and the secondary address is missing
-                            if (metadata.record_type === 'H' && !street2) {
-                                console.log('Detected record_type H with missing apartment/unit number');
-                                $('#missing-apartment-number-message').show();
-                            } else {
-                                $('#missing-apartment-number-message').hide();
-                            }
 
                             modal.show();
 
@@ -434,6 +438,25 @@ jQuery(document).ready(function($) {
                 }
             }
         });
+    });
+
+    $('#submit-apartment-number').on('click', () => {
+        const apartmentNumber = $('#apartment-number-input').val().trim();
+        if (apartmentNumber) {
+            $(currentAddressType === 'billing' ? '#billing_address_2' : '#shipping_address_2').val(apartmentNumber);
+            $('#missing-apartment-number-message').hide();
+            $('#address-validation-content').show();
+            isMissingApartmentNumber = true;
+            handleAddressValidation(currentAddressType === 'billing' ? billingAllFields : shippingAllFields, currentAddressType);
+        }
+    });
+
+    $('#no-apartment-number').on('click', (e) => {
+        e.preventDefault();
+        $('#missing-apartment-number-message').hide();
+        $('#address-validation-content').show();
+        isMissingApartmentNumber = true;
+        handleAddressValidation(currentAddressType === 'billing' ? billingAllFields : shippingAllFields, currentAddressType);
     });
 
     billingAllFields.forEach(selector => {
