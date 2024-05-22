@@ -15,7 +15,7 @@ jQuery(document).ready(function($) {
                 <div id="address-validation-content">
                     <div class="api-col-container" style="display: none;">
                         <div class="api-col api-col-1">
-                            <p><strong>Your Entered:</strong></p>
+                            <p><strong>You Entered:</strong></p>
                             <div id="user-entered-address"></div>
                             <button id="use-original-address">Keep Original Address</button>
                         </div>
@@ -141,6 +141,7 @@ jQuery(document).ready(function($) {
                             apiResponseData = data;
                             const components = data[0].components;
                             const deliveryLine1 = data[0].delivery_line_1;
+                            const deliveryLine2 = data[0].delivery_line_2 || ''; // Get delivery_line_2 if present
                             console.log('Validated Address:', components);  // Specifically log the validated address components
                             $('#user-entered-address').html(`
                                 <span class="modal-street">${enteredStreet} ${street2}</span>
@@ -166,6 +167,7 @@ jQuery(document).ready(function($) {
                             $('#api-suggested-address').html(`
                                 ${urbanization ? `<span class="modal-urbanization">${urbanization}</span>` : ''}
                                 <span class="modal-street">${suggestedStreet}</span>
+                                ${deliveryLine2 ? `<span class="modal-street2">${deliveryLine2}</span>` : ''}
                                 ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
                                 <span class="modal-city">${components.city_name}</span>
                                 <span class="modal-state">${components.state_abbreviation}</span>
@@ -198,9 +200,9 @@ jQuery(document).ready(function($) {
                                 }
                             });
 
-                            // Populate address_2 only if both secondary_designator and secondary_number are present
-                            let address2Value = '';
-                            if (components.secondary_designator && components.secondary_number) {
+                            // Populate address_2 with delivery_line_2 if present, else use secondary_designator and secondary_number
+                            let address2Value = deliveryLine2 || '';
+                            if (!address2Value && components.secondary_designator && components.secondary_number) {
                                 address2Value = `${components.secondary_designator} ${components.secondary_number}`;
                             }
 
@@ -357,6 +359,7 @@ jQuery(document).ready(function($) {
             const components = apiResponseData[0].components;
             const metadata = apiResponseData[0].metadata;
             const deliveryLine1 = apiResponseData[0].delivery_line_1;
+            const deliveryLine2 = apiResponseData[0].delivery_line_2 || ''; // Get delivery_line_2 if present
             const addressFields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
 
             let suggestedStreet = '';
@@ -373,7 +376,7 @@ jQuery(document).ready(function($) {
                 ? `${components.secondary_designator} ${components.secondary_number}`
                 : '';
             const urbanization = components.urbanization || '';
-            let address2Value = secondaryAddress;
+            let address2Value = deliveryLine2 || secondaryAddress;
 
             if (urbanization) {
                 address2Value = `${urbanization} ${address2Value}`.trim();
