@@ -6,10 +6,16 @@ jQuery(document).ready(function($) {
         <div id="address-validation-modal" style="display: none;">
             <div class="inner-modal">
                 <h4 id="modal-heading">Confirm Address</h4>
+                <div id="missing-apartment-number-message" style="display: none;">
+                    <p>You forgot to enter your apartment or suite #. Please enter it here:</p>
+                    <input type="text" id="apartment-number-input" placeholder="Apartment/Suite Number" />
+                    <button id="submit-apartment-number">Submit</button>
+                    <a href="#" id="no-apartment-number">I do not have one.</a>
+                </div>
                 <div id="address-validation-content">
                     <div class="api-col-container" style="display: none;">
                         <div class="api-col api-col-1">
-                            <p><strong>Your Entered:</strong></p>
+                            <p><strong>You Entered:</strong></p>
                             <div id="user-entered-address"></div>
                             <button id="use-original-address">Keep Original Address</button>
                         </div>
@@ -39,6 +45,7 @@ jQuery(document).ready(function($) {
     let apiResponseData;
     let bypassApiCall = false;
     let currentAddressType = 'billing'; // Default to billing, will be updated dynamically
+    let isMissingApartmentNumber = false;
 
     const billingRequiredFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state'];
     const billingAllFields = ['#billing_address_1', '#billing_city', '#billing_postcode', '#billing_state', '#billing_address_2'];
@@ -113,6 +120,16 @@ jQuery(document).ready(function($) {
                         const metadata = data[0].metadata;
                         console.log('Detected zip_type:', metadata.zip_type);
                         console.log('Detected record_type:', metadata.record_type);
+
+                        // Check if the record_type is 'H' and the secondary address is missing
+                        if (metadata.record_type === 'H' && !street2 && !isMissingApartmentNumber) {
+                            console.log('Detected record_type H with missing apartment/unit number');
+                            $('#missing-apartment-number-message').show();
+                            $('#address-validation-content').hide();
+                            $('#address-validation-modal').show();
+                            return;
+                        }
+
                         if (analysis.footnotes && analysis.footnotes.startsWith('F')) {
                             // Show address not found message
                             $('#modal-heading').text('Invalid Address');
@@ -124,6 +141,7 @@ jQuery(document).ready(function($) {
                             apiResponseData = data;
                             const components = data[0].components;
                             const deliveryLine1 = data[0].delivery_line_1;
+                            const deliveryLine2 = data[0].delivery_line_2 || ''; // Get delivery_line_2 if present
                             console.log('Validated Address:', components);  // Specifically log the validated address components
                             $('#user-entered-address').html(`
                                 <span class="modal-street">${enteredStreet} ${street2}</span>
@@ -149,6 +167,7 @@ jQuery(document).ready(function($) {
                             $('#api-suggested-address').html(`
                                 ${urbanization ? `<span class="modal-urbanization">${urbanization}</span>` : ''}
                                 <span class="modal-street">${suggestedStreet}</span>
+                                ${deliveryLine2 ? `<span class="modal-street2">${deliveryLine2}</span>` : ''}
                                 ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
                                 <span class="modal-city">${components.city_name}</span>
                                 <span class="modal-state">${components.state_abbreviation}</span>
@@ -159,6 +178,7 @@ jQuery(document).ready(function($) {
                             apiColContainer.show();
                             validationFailedMessage.hide();
                             addressNotFoundMessage.hide();
+
                             modal.show();
 
                             // Add data-validated attribute to wrapper of fields
@@ -180,9 +200,9 @@ jQuery(document).ready(function($) {
                                 }
                             });
 
-                            // Populate address_2 only if both secondary_designator and secondary_number are present
-                            let address2Value = '';
-                            if (components.secondary_designator && components.secondary_number) {
+                            // Populate address_2 with delivery_line_2 if present, else use secondary_designator and secondary_number
+                            let address2Value = deliveryLine2 || '';
+                            if (!address2Value && components.secondary_designator && components.secondary_number) {
                                 address2Value = `${components.secondary_designator} ${components.secondary_number}`;
                             }
 
@@ -279,11 +299,13 @@ jQuery(document).ready(function($) {
                     const apiColContainer = content.find('.api-col-container');
                     const validationFailedMessage = $('#validation-failed-message');
                     const addressNotFoundMessage = $('#address-not-found-message');
+                    const missingApartmentNumberMessage = $('#missing-apartment-number-message');
                     const failedFieldsList = $('#failed-fields-list');
 
                     apiColContainer.hide();
                     validationFailedMessage.show();
                     addressNotFoundMessage.hide();
+                    missingApartmentNumberMessage.hide();
                     modal.show();
 
                     // Highlight the fields that failed validation
@@ -337,6 +359,7 @@ jQuery(document).ready(function($) {
             const components = apiResponseData[0].components;
             const metadata = apiResponseData[0].metadata;
             const deliveryLine1 = apiResponseData[0].delivery_line_1;
+            const deliveryLine2 = apiResponseData[0].delivery_line_2 || ''; // Get delivery_line_2 if present
             const addressFields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
 
             let suggestedStreet = '';
@@ -353,7 +376,7 @@ jQuery(document).ready(function($) {
                 ? `${components.secondary_designator} ${components.secondary_number}`
                 : '';
             const urbanization = components.urbanization || '';
-            let address2Value = secondaryAddress;
+            let address2Value = deliveryLine2 || secondaryAddress;
 
             if (urbanization) {
                 address2Value = `${urbanization} ${address2Value}`.trim();
@@ -396,6 +419,47 @@ jQuery(document).ready(function($) {
 
     $('#close-address-not-found-modal').on('click', () => {
         $('#address-validation-modal').hide();
+    });
+
+    $('#reenter-address').on('click', () => {
+        $('#address-validation-modal').hide();
+        // Remove data-validated attribute and readonly class from current address type fields
+        const fields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
+        fields.forEach(selector => {
+            const input = $(selector);
+            if (input.length) {
+                const wrapper = input.closest('.woocommerce-input-wrapper');
+                if (wrapper.length) {
+                    wrapper.removeAttr('data-validated');
+                }
+                input.removeAttr('readonly');
+                input.removeClass('readonly'); // Remove readonly class
+                input.css('background-color', ''); // Reset background color
+                if (selector.endsWith('_state')) {
+                    input.prop('disabled', false); // Enable the select field
+                    input.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly class from select2 container
+                }
+            }
+        });
+    });
+
+    $('#submit-apartment-number').on('click', () => {
+        const apartmentNumber = $('#apartment-number-input').val().trim();
+        if (apartmentNumber) {
+            $(currentAddressType === 'billing' ? '#billing_address_2' : '#shipping_address_2').val(apartmentNumber);
+            $('#missing-apartment-number-message').hide();
+            $('#address-validation-content').show();
+            isMissingApartmentNumber = true;
+            handleAddressValidation(currentAddressType === 'billing' ? billingAllFields : shippingAllFields, currentAddressType);
+        }
+    });
+
+    $('#no-apartment-number').on('click', (e) => {
+        e.preventDefault();
+        $('#missing-apartment-number-message').hide();
+        $('#address-validation-content').show();
+        isMissingApartmentNumber = true;
+        handleAddressValidation(currentAddressType === 'billing' ? billingAllFields : shippingAllFields, currentAddressType);
     });
 
     billingAllFields.forEach(selector => {
@@ -456,7 +520,6 @@ jQuery(document).ready(function($) {
     const checkbox = $('#ship-to-different-address-checkbox');
     if (checkbox.length) {
         checkbox.on('change', function() {
-            const modal = $('#address-validation-modal');
             if (this.checked) {
                 // Clear all shipping fields when checkbox is clicked
                 shippingAllFields.forEach(selector => {
@@ -469,7 +532,7 @@ jQuery(document).ready(function($) {
                     }
                 });
             } else {
-                modal.hide(); // Hide modal if shipping is unchecked
+                $('#address-validation-modal').hide(); // Hide modal if shipping is unchecked
             }
         });
     } else {
@@ -564,18 +627,39 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Clear fields if the user is not logged in
-    if (typeof wc_checkout_params !== 'undefined' && !wc_checkout_params.is_logged_in) {
-        billingAllFields.concat(shippingAllFields).forEach(selector => {
-            const input = $(selector);
-            if (input.length) {
-                input.val('');
-                if (selector === '#billing_state' || selector === '#shipping_state') {
-                    input.prop('selectedIndex', 0); // Reset the select field
+    // Clear fields if the user is not logged in and has no saved billing address
+    if (typeof wc_checkout_params !== 'undefined') {
+        if (!wc_checkout_params.is_user_logged_in || !wc_checkout_params.has_saved_billing_address) {
+            billingAllFields.concat(shippingAllFields).forEach(selector => {
+                const input = $(selector);
+                if (input.length) {
+                    input.val('');
+                    if (selector === '#billing_state' || selector === '#shipping_state') {
+                        input.prop('selectedIndex', 0); // Reset the select field
+                    }
                 }
-            }
-        });
+            });
+        }
     }
+
+    // Trigger Smarty API modal to show on page load if logged in and has saved billing address
+    if (wc_checkout_params.is_user_logged_in && wc_checkout_params.has_saved_billing_address) {
+        handleAddressValidation(billingAllFields, 'billing');
+    }
+
+    // Ensure the modal is triggered for shipping address if a bad address is entered
+    $('#ship-to-different-address-checkbox').on('change', function() {
+        if (this.checked) {
+            shippingAllFields.forEach(selector => {
+                const element = $(selector);
+                if (element.length) {
+                    element.on('change', () => {
+                        handleAddressValidation(shippingAllFields, 'shipping');
+                    });
+                }
+            });
+        }
+    });
 
     console.log('Address validation script setup complete');
 });

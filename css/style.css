@@ -171,3 +171,27 @@
 #user-entered-address span, #api-suggested-address span {
     font-size: 16px;
 }
+
+
+#missing-apartment-number-message {
+    border-bottom: 1px solid #e3e3e3;
+    text-align: center;
+    margin: 0 auto;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    width: 75%;
+}
+
+#apartment-number-input {
+    padding: 0.5rem 1rem;
+    border: 1px solid rgb(118,118,118);
+    border-radius: 4px;
+}
+
+#no-apartment-number {
+    display: block;
+    margin-top: 10px;
+    font-weight: 700;
+    text-align: center
+}
