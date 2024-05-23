@@ -75,6 +75,7 @@
 
 .inner-modal button {
     background-color: #F3716D;
+    border-radius: 3px;
     color: #ffffff;
     font-size: 16px;
     padding: 12px 20px;
@@ -104,7 +105,7 @@
 
 .woocommerce-input-wrapper[data-validated="true"]::after {
     content: '';
-    background-image: url('/wp-content/plugins/smarty-address-validation/img/green-check.svg') !important;
+    background-image: url('../img/green-check.svg') !important;
     background-repeat: no-repeat;
     background-size: contain;
     position: absolute;
