@@ -520,7 +520,6 @@ jQuery(document).ready(function($) {
     const checkbox = $('#ship-to-different-address-checkbox');
     if (checkbox.length) {
         checkbox.on('change', function() {
-            const modal = $('#address-validation-modal');
             if (this.checked) {
                 // Clear all shipping fields when checkbox is clicked
                 shippingAllFields.forEach(selector => {
@@ -533,7 +532,7 @@ jQuery(document).ready(function($) {
                     }
                 });
             } else {
-                modal.hide(); // Hide modal if shipping is unchecked
+                $('#address-validation-modal').hide(); // Hide modal if shipping is unchecked
             }
         });
     } else {
@@ -647,6 +646,20 @@ jQuery(document).ready(function($) {
     if (wc_checkout_params.is_user_logged_in && wc_checkout_params.has_saved_billing_address) {
         handleAddressValidation(billingAllFields, 'billing');
     }
+
+    // Ensure the modal is triggered for shipping address if a bad address is entered
+    $('#ship-to-different-address-checkbox').on('change', function() {
+        if (this.checked) {
+            shippingAllFields.forEach(selector => {
+                const element = $(selector);
+                if (element.length) {
+                    element.on('change', () => {
+                        handleAddressValidation(shippingAllFields, 'shipping');
+                    });
+                }
+            });
+        }
+    });
 
     console.log('Address validation script setup complete');
 });

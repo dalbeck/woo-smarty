@@ -47,10 +47,10 @@ function smarty_enqueue_scripts() {
 
 add_action( 'wp_enqueue_scripts', 'smarty_enqueue_scripts' );
 
-// add_filter('default_checkout_billing_country', 'change_default_checkout_country');
-// add_filter('default_checkout_billing_state', 'change_default_checkout_state');
-// add_filter('default_checkout_shipping_country', 'change_default_checkout_country');
-// add_filter('default_checkout_shipping_state', 'change_default_checkout_state');
+add_filter('default_checkout_billing_country', 'change_default_checkout_country');
+add_filter('default_checkout_billing_state', 'change_default_checkout_state');
+add_filter('default_checkout_shipping_country', 'change_default_checkout_country');
+add_filter('default_checkout_shipping_state', 'change_default_checkout_state');
 
 /**
  * Changes the default checkout country in WooCommerce.
@@ -60,9 +60,12 @@ add_action( 'wp_enqueue_scripts', 'smarty_enqueue_scripts' );
  *
  * @return string Empty string to set the default country to none.
  */
-function change_default_checkout_country()
+function change_default_checkout_country($country)
 {
-    //return ''; // country code
+    if (!is_user_logged_in()) {
+        return ''; // country code
+    }
+    return $country; // Return default country for logged-in users
 }
 
 /**
@@ -73,9 +76,12 @@ function change_default_checkout_country()
  *
  * @return string Empty string to set the default state to none.
  */
-function change_default_checkout_state()
+function change_default_checkout_state($state)
 {
-    //return ''; // state code
+    if (!is_user_logged_in()) {
+        return ''; // state code
+    }
+    return $state; // Return default state for logged-in users
 }
 
 include_once(dirname(__FILE__) . '/lib/smarty-api-functions.php');
