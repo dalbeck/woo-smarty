@@ -628,17 +628,24 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Clear fields if the user is not logged in
-    if (typeof wc_checkout_params !== 'undefined' && !wc_checkout_params.is_logged_in) {
-        billingAllFields.concat(shippingAllFields).forEach(selector => {
-            const input = $(selector);
-            if (input.length) {
-                input.val('');
-                if (selector === '#billing_state' || selector === '#shipping_state') {
-                    input.prop('selectedIndex', 0); // Reset the select field
+    // Clear fields if the user is not logged in and has no saved billing address
+    if (typeof wc_checkout_params !== 'undefined') {
+        if (!wc_checkout_params.is_user_logged_in || !wc_checkout_params.has_saved_billing_address) {
+            billingAllFields.concat(shippingAllFields).forEach(selector => {
+                const input = $(selector);
+                if (input.length) {
+                    input.val('');
+                    if (selector === '#billing_state' || selector === '#shipping_state') {
+                        input.prop('selectedIndex', 0); // Reset the select field
+                    }
                 }
-            }
-        });
+            });
+        }
+    }
+
+    // Trigger Smarty API modal to show on page load if logged in and has saved billing address
+    if (wc_checkout_params.is_user_logged_in && wc_checkout_params.has_saved_billing_address) {
+        handleAddressValidation(billingAllFields, 'billing');
     }
 
     console.log('Address validation script setup complete');

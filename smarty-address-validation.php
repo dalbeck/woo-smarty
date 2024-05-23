@@ -21,19 +21,36 @@ if ( !in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', 
     return;
 }
 
+function add_custom_wc_checkout_params()
+{
+    if (function_exists('is_checkout') && is_checkout()) {
+        wp_enqueue_script('smarty-wc-checkout-params', plugins_url('/js/wc_checkout_params_customization.js', __FILE__), array('jquery', 'wc-checkout'), '1.0', true);
+
+        $custom_params = array(
+            'is_user_logged_in' => is_user_logged_in() ? '1' : '0',
+            'has_saved_billing_address' => is_user_logged_in() && get_user_meta(get_current_user_id(), 'billing_address_1', true) ? '1' : '0',
+            'has_saved_shipping_address' => is_user_logged_in() && get_user_meta(get_current_user_id(), 'shipping_address_1', true) ? '1' : '0',
+        );
+
+        wp_localize_script('smarty-wc-checkout-params', 'custom_params', $custom_params);
+    }
+}
+add_action('wp_enqueue_scripts', 'add_custom_wc_checkout_params');
+
+
 function smarty_enqueue_scripts() {
     if ( is_checkout() ) {
-        wp_enqueue_script('smarty-validation-js', plugins_url('js/validation.js', __FILE__), array(), '1.0', true);
+        wp_enqueue_script('smarty-validation-js', plugins_url('js/validation.js', __FILE__), array('jquery'), '1.0', true);
         wp_enqueue_style( 'smarty-validation-css', plugins_url( 'css/style.css', __FILE__ ), array(), '1.0' );
     }
 }
 
 add_action( 'wp_enqueue_scripts', 'smarty_enqueue_scripts' );
 
-add_filter('default_checkout_billing_country', 'change_default_checkout_country');
-add_filter('default_checkout_billing_state', 'change_default_checkout_state');
-add_filter('default_checkout_shipping_country', 'change_default_checkout_country');
-add_filter('default_checkout_shipping_state', 'change_default_checkout_state');
+// add_filter('default_checkout_billing_country', 'change_default_checkout_country');
+// add_filter('default_checkout_billing_state', 'change_default_checkout_state');
+// add_filter('default_checkout_shipping_country', 'change_default_checkout_country');
+// add_filter('default_checkout_shipping_state', 'change_default_checkout_state');
 
 /**
  * Changes the default checkout country in WooCommerce.
@@ -45,7 +62,7 @@ add_filter('default_checkout_shipping_state', 'change_default_checkout_state');
  */
 function change_default_checkout_country()
 {
-    return ''; // country code
+    //return ''; // country code
 }
 
 /**
@@ -58,7 +75,7 @@ function change_default_checkout_country()
  */
 function change_default_checkout_state()
 {
-    return ''; // state code
+    //return ''; // state code
 }
 
 include_once(dirname(__FILE__) . '/lib/smarty-api-functions.php');
