@@ -1,6 +1,27 @@
 jQuery(document).ready(function($) {
     console.log('Address validation script loaded'); // Confirm script load
 
+    // Clear address fields if the user is not logged in
+    if (typeof wc_checkout_params !== 'undefined' && wc_checkout_params.is_user_logged_in === "0") {
+        const fieldsToClear = [
+            '#billing_address_1', '#billing_address_2', '#billing_city',
+            '#billing_state', '#billing_postcode', '#shipping_address_1',
+            '#shipping_address_2', '#shipping_city', '#shipping_state', '#shipping_postcode'
+        ];
+
+        fieldsToClear.forEach(selector => {
+            const input = $(selector);
+            if (input.length) {
+                input.val('');
+                if (selector === '#billing_state' || selector === '#shipping_state') {
+                    input.prop('selectedIndex', 0); // Reset the select field
+                }
+            }
+        });
+
+        console.log('Checkout fields cleared for guest users.');
+    }
+
     // Create and append the modal structure to the body
     const modalHTML = `
         <div id="address-validation-modal" style="display: none;">
