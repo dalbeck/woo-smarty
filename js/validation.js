@@ -63,6 +63,8 @@ jQuery(document).ready(function($) {
 
     const apiUrl = smarty_params.api_url;
     const apiKey = smarty_params.api_key;
+    const authToken = smarty_params.auth_token;
+    const authId = smarty_params.auth_id;
     let apiResponseData;
     let bypassApiCall = false;
     let currentAddressType = 'billing'; // Default to billing, will be updated dynamically
@@ -93,7 +95,7 @@ jQuery(document).ready(function($) {
 
             const enteredStreet = street;
 
-            const requestUrl = `${apiUrl}?key=${apiKey}&street=${encodeURIComponent(street)}&street2=${encodeURIComponent(street2)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipcode=${encodeURIComponent(zipcode)}&match=invalid&candidates=10`;
+            const requestUrl = `${apiUrl}?key=${apiKey}&street=${encodeURIComponent(street)}&street2=${encodeURIComponent(street2)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipcode=${encodeURIComponent(zipcode)}&match=enhanced&candidates=10&license=us-core-cloud`;
 
             console.log(`Validating ${addressType} address:`, { street, street2, city, state, zipcode });
             console.log('Request URL:', requestUrl);
