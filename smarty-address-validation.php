@@ -3,7 +3,7 @@
  * Plugin Name: Smarty Address Validation for WooCommerce
  * Plugin URI: https://www.ecosmetics.com
  * Description: Integrates Smarty address validation API into WooCommerce checkout fields.
- * Version: 1.0.8
+ * Version: 2.0.0
  * Author: Danny Albeck
  * Author URI: https://www.ecosmetics.com
  * License: GPL2
