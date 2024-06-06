@@ -173,29 +173,42 @@ jQuery(document).ready(function($) {
                                 <span class="modal-zip">${zipcode}</span>
                             `);
 
-                            // Add radio buttons for each suggested address
-                            let suggestedAddressesHTML = data.map((address, index) => {
-                                const components = address.components;
-                                const deliveryLine1 = address.delivery_line_1 || '';
-                                const deliveryLine2 = address.delivery_line_2 || '';
-                                const secondaryAddress = (components.secondary_designator && components.secondary_number)
-                                    ? `${components.secondary_designator} ${components.secondary_number}`
-                                    : '';
-                                const urbanization = components.urbanization || '';
-                                const suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
-                                const fullAddress = `${suggestedStreet}${deliveryLine2 ? ` ${deliveryLine2}` : ''}, ${components.city_name}, ${components.state_abbreviation} ${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`;
+                            if (data.length === 1) {
+                                // Use the single suggested address directly
+                                const singleAddress = data[0];
+                                const components = singleAddress.components;
+                                const fullAddress = `
+                                    <div class="suggested-address single-response">
+                                        <span>${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}</span>
+                                        <span>${components.city_name}</span>
+                                        <span>${components.state_abbreviation}</span>
+                                        <span>${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}</span>
+                                    </div>`;
+                                $('#api-suggested-address').html(fullAddress);
+                            } else {
+                                // Add radio buttons for each suggested address
+                                let suggestedAddressesHTML = data.map((address, index) => {
+                                    const components = address.components;
+                                    const deliveryLine1 = address.delivery_line_1 || '';
+                                    const deliveryLine2 = address.delivery_line_2 || '';
+                                    const secondaryAddress = (components.secondary_designator && components.secondary_number)
+                                        ? `${components.secondary_designator} ${components.secondary_number}`
+                                        : '';
+                                    const urbanization = components.urbanization || '';
+                                    const suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
+                                    const fullAddress = `${suggestedStreet}, ${components.city_name}, ${components.state_abbreviation} ${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`;
 
-                                return `
-                                    <div class="suggested-address">
-                                        <label>
-                                            <input type="radio" name="suggested-address" value="${index}" ${index === 0 ? 'checked' : ''}>
-                                            <span>${fullAddress}</span>
-                                        </label>
-                                    </div>
-                                `;
-                            }).join('');
+                                    return `
+                                        <div class="suggested-address">
+                                            <label>
+                                                <input type="radio" name="suggested-address" value="${index}" ${index === 0 ? 'checked' : ''}>
+                                                <span>${fullAddress}</span>
+                                            </label>
+                                        </div>`;
+                                }).join('');
 
-                            $('#api-suggested-address').html(suggestedAddressesHTML);
+                                $('#api-suggested-address').html(suggestedAddressesHTML);
+                            }
 
                             $('#modal-heading').text(`Confirm ${addressType.charAt(0).toUpperCase() + addressType.slice(1)} Address`);
                             apiColContainer.show();

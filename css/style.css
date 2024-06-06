@@ -204,6 +204,10 @@
     border-bottom: 1px solid lightgray;
 }
 
+.single-response {
+    flex-direction: column;
+}
+
 .suggested-address:last-child {
     border-bottom: none;
 }
