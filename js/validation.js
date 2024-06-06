@@ -163,8 +163,20 @@ jQuery(document).ready(function($) {
                         } else {
                             apiResponseData = data;
                             const components = data[0].components;
-                            const deliveryLine1 = data[0].delivery_line_1 || '';
+                            let deliveryLine1 = data[0].delivery_line_1 || '';
                             const deliveryLine2 = data[0].delivery_line_2 || ''; // Get delivery_line_2 if present
+
+                            // Log the dpv_match_code and dpv_footnotes for debugging
+                            console.log('dpv_match_code:', analysis.dpv_match_code);
+                            console.log('dpv_footnotes:', analysis.dpv_footnotes);
+
+                            // Modify deliveryLine1 based on dpv_match_code and dpv_footnotes
+                            if (analysis.dpv_match_code === 'S' || analysis.dpv_footnotes.includes('TA')) {
+                                components.primary_number = components.primary_number.replace(/([0-9]+)[A-Za-z]?$/, '$1'); // Strip trailing alpha character from primary_number
+                                deliveryLine1 = `${components.primary_number} ${components.street_name} ${components.street_suffix}`.trim();
+                                console.log('Modified deliveryLine1 for dpv_match_code "S" or dpv_footnotes containing "TA":', deliveryLine1);
+                            }
+
                             console.log('Validated Address:', components);  // Specifically log the validated address components
                             $('#user-entered-address').html(`
                                 <span class="modal-street">${enteredStreet} ${street2}</span>
@@ -189,13 +201,21 @@ jQuery(document).ready(function($) {
                                 // Add radio buttons for each suggested address
                                 let suggestedAddressesHTML = data.map((address, index) => {
                                     const components = address.components;
-                                    const deliveryLine1 = address.delivery_line_1 || '';
+                                    let deliveryLine1 = address.delivery_line_1 || '';
                                     const deliveryLine2 = address.delivery_line_2 || '';
                                     const secondaryAddress = (components.secondary_designator && components.secondary_number)
                                         ? `${components.secondary_designator} ${components.secondary_number}`
                                         : '';
                                     const urbanization = components.urbanization || '';
                                     const suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
+
+                                    // Modify deliveryLine1 based on dpv_match_code and dpv_footnotes
+                                    if (address.analysis.dpv_match_code === 'S' || address.analysis.dpv_footnotes.includes('TA')) {
+                                        components.primary_number = components.primary_number.replace(/([0-9]+)[A-Za-z]?$/, '$1'); // Strip trailing alpha character from primary_number
+                                        deliveryLine1 = `${components.primary_number} ${components.street_name} ${components.street_suffix}`.trim();
+                                        console.log('Modified deliveryLine1 for dpv_match_code "S" or dpv_footnotes containing "TA":', deliveryLine1);
+                                    }
+
                                     const fullAddress = `${suggestedStreet}, ${components.city_name}, ${components.state_abbreviation} ${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`;
 
                                     return `
@@ -373,7 +393,8 @@ jQuery(document).ready(function($) {
             const selectedAddress = apiResponseData[selectedIndex];
             const components = selectedAddress.components;
             const metadata = selectedAddress.metadata;
-            const deliveryLine1 = selectedAddress.delivery_line_1 || '';
+            const analysis = selectedAddress.analysis;
+            let deliveryLine1 = selectedAddress.delivery_line_1 || '';
             const deliveryLine2 = selectedAddress.delivery_line_2 || '';
             const addressFields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
 
@@ -384,6 +405,13 @@ jQuery(document).ready(function($) {
                 suggestedStreet = `${components.street_name} ${components.primary_number}`;
             } else {
                 suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
+            }
+
+            // Modify deliveryLine1 based on dpv_match_code and dpv_footnotes
+            if (analysis.dpv_match_code === 'S' || analysis.dpv_footnotes.includes('TA')) {
+                components.primary_number = components.primary_number.replace(/([0-9]+)[A-Za-z]?$/, '$1'); // Strip trailing alpha character from primary_number
+                deliveryLine1 = `${components.primary_number} ${components.street_name} ${components.street_suffix}`.trim();
+                console.log('Modified deliveryLine1 for dpv_match_code "S" or dpv_footnotes containing "TA":', deliveryLine1);
             }
 
             $(addressFields[0]).val(suggestedStreet);
@@ -451,7 +479,8 @@ jQuery(document).ready(function($) {
 
             const components = apiResponseData[0].components;
             const metadata = apiResponseData[0].metadata;
-            const deliveryLine1 = apiResponseData[0].delivery_line_1;
+            const analysis = apiResponseData[0].analysis;
+            let deliveryLine1 = apiResponseData[0].delivery_line_1;
             const deliveryLine2 = apiResponseData[0].delivery_line_2 || ''; // Get delivery_line_2 if present
             const addressFields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
 
@@ -462,6 +491,13 @@ jQuery(document).ready(function($) {
                 suggestedStreet = `${components.street_name} ${components.primary_number}`;
             } else {
                 suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
+            }
+
+            // Modify deliveryLine1 based on dpv_match_code and dpv_footnotes
+            if (analysis.dpv_match_code === 'S' || analysis.dpv_footnotes.includes('TA')) {
+                components.primary_number = components.primary_number.replace(/([0-9]+)[A-Za-z]?$/, '$1'); // Strip trailing alpha character from primary_number
+                deliveryLine1 = `${components.primary_number} ${components.street_name} ${components.street_suffix}`.trim();
+                console.log('Modified deliveryLine1 for dpv_match_code "S" or dpv_footnotes containing "TA":', deliveryLine1);
             }
 
             $(addressFields[0]).val(suggestedStreet);
