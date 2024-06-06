@@ -423,6 +423,28 @@ jQuery(document).ready(function($) {
         }
     });
 
+    $('#use-original-address').on('click', () => {
+        $('#address-validation-modal').hide();
+        // Remove data-validated attribute and readonly class from current address type fields
+        const fields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
+        fields.forEach(selector => {
+            const input = $(selector);
+            if (input.length) {
+                const wrapper = input.closest('.woocommerce-input-wrapper');
+                if (wrapper.length) {
+                    wrapper.removeAttr('data-validated');
+                }
+                input.removeAttr('readonly');
+                input.removeClass('readonly'); // Remove readonly class
+                input.css('background-color', ''); // Reset background color
+                if (selector.endsWith('_state')) {
+                    input.prop('disabled', false); // Enable the select field
+                    input.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly class from select2 container
+                }
+            }
+        });
+    });
+
     $('#use-corrected-address').on('click', () => {
         if (apiResponseData) {
             bypassApiCall = true;
