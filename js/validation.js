@@ -163,7 +163,7 @@ jQuery(document).ready(function($) {
                         } else {
                             apiResponseData = data;
                             const components = data[0].components;
-                            const deliveryLine1 = data[0].delivery_line_1;
+                            const deliveryLine1 = data[0].delivery_line_1 || '';
                             const deliveryLine2 = data[0].delivery_line_2 || ''; // Get delivery_line_2 if present
                             console.log('Validated Address:', components);  // Specifically log the validated address components
                             $('#user-entered-address').html(`
@@ -173,30 +173,34 @@ jQuery(document).ready(function($) {
                                 <span class="modal-zip">${zipcode}</span>
                             `);
 
-                            // Determine the correct street format
-                            let suggestedStreet = '';
-                            if (metadata.zip_type === 'Military') {
-                                suggestedStreet = `${deliveryLine1}`;
-                            } else if (metadata.record_type === 'P') {
-                                suggestedStreet = `${components.street_name} ${components.primary_number}`;
-                            } else {
-                                suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
-                            }
+                            // Add radio buttons for each suggested address
+                            let suggestedAddressesHTML = data.map((address, index) => {
+                                const components = address.components;
+                                const deliveryLine1 = address.delivery_line_1 || '';
+                                const deliveryLine2 = address.delivery_line_2 || '';
+                                const secondaryAddress = (components.secondary_designator && components.secondary_number)
+                                    ? `${components.secondary_designator} ${components.secondary_number}`
+                                    : '';
+                                const urbanization = components.urbanization || '';
+                                const suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
 
-                            const secondaryAddress = components.secondary_designator
-                                ? `${components.secondary_designator} ${components.secondary_number}`
-                                : '';
-                            const urbanization = components.urbanization || '';
-                            $('#api-suggested-address').html(`
-                                ${urbanization ? `<span class="modal-urbanization">${urbanization}</span>` : ''}
-                                <span class="modal-street">${suggestedStreet}</span>
-                                ${deliveryLine2 ? `<span class="modal-street2">${deliveryLine2}</span>` : ''}
-                                ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
-                                <span class="modal-city">${components.city_name}</span>
-                                <span class="modal-state">${components.state_abbreviation}</span>
-                                <span class="modal-zip">${components.zipcode}</span>
-                                ${components.plus4_code ? `<span class="modal-zip-extended">-${components.plus4_code}</span>` : ''}
-                            `);
+                                return `
+                                    <label>
+                                        <input type="radio" name="suggested-address" value="${index}" ${index === 0 ? 'checked' : ''}>
+                                        ${urbanization ? `<span class="modal-urbanization">${urbanization}</span>` : ''}
+                                        <span class="modal-street">${suggestedStreet}</span>
+                                        ${deliveryLine2 ? `<span class="modal-street2">${deliveryLine2}</span>` : ''}
+                                        ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
+                                        <span class="modal-city">${components.city_name}</span>
+                                        <span class="modal-state">${components.state_abbreviation}</span>
+                                        <span class="modal-zip">${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}</span>
+                                    </label>
+                                    <br>
+                                `;
+                            }).join('');
+
+                            $('#api-suggested-address').html(suggestedAddressesHTML);
+
                             $('#modal-heading').text(`Confirm ${addressType.charAt(0).toUpperCase() + addressType.slice(1)} Address`);
                             apiColContainer.show();
                             validationFailedMessage.hide();
@@ -230,8 +234,8 @@ jQuery(document).ready(function($) {
                             }
 
                             // Add urbanization to address_2 if present
-                            if (urbanization) {
-                                address2Value = `${urbanization} ${address2Value}`.trim();
+                            if (components.urbanization) {
+                                address2Value = `${components.urbanization} ${address2Value}`.trim();
                             }
 
                             // Set the value for address_2
@@ -352,6 +356,63 @@ jQuery(document).ready(function($) {
             console.log(`${addressType} address fields are not completely filled.`);
         }
     }
+
+    // Event listener for selecting a suggested address
+    $('#api-suggested-address').on('change', 'input[name="suggested-address"]', function() {
+        const selectedIndex = $('input[name="suggested-address"]:checked').val();
+        if (apiResponseData && apiResponseData[selectedIndex]) {
+            const selectedAddress = apiResponseData[selectedIndex];
+            const components = selectedAddress.components;
+            const metadata = selectedAddress.metadata;
+            const deliveryLine1 = selectedAddress.delivery_line_1 || '';
+            const deliveryLine2 = selectedAddress.delivery_line_2 || '';
+            const addressFields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
+
+            let suggestedStreet = '';
+            if (metadata.zip_type === 'Military') {
+                suggestedStreet = `${deliveryLine1}`;
+            } else if (metadata.record_type === 'P') {
+                suggestedStreet = `${components.street_name} ${components.primary_number}`;
+            } else {
+                suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
+            }
+
+            $(addressFields[0]).val(suggestedStreet);
+            const secondaryAddress = (components.secondary_designator && components.secondary_number)
+                ? `${components.secondary_designator} ${components.secondary_number}`
+                : '';
+            const urbanization = components.urbanization || '';
+            let address2Value = deliveryLine2 || secondaryAddress;
+
+            if (urbanization) {
+                address2Value = `${urbanization} ${address2Value}`.trim();
+            }
+            $(addressFields[4]).val(address2Value);
+            $(addressFields[1]).val(components.city_name);
+            $(addressFields[2]).val(`${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`);
+            const stateField = $(addressFields[3]);
+            stateField.val(components.state_abbreviation);
+            stateField.trigger('change');
+
+            // Add data-validated attribute to wrapper of fields
+            addressFields.forEach(selector => {
+                const input = $(selector);
+                if (input.length && input.val().trim()) {
+                    const wrapper = input.closest('.woocommerce-input-wrapper');
+                    if (wrapper.length) {
+                        wrapper.attr('data-validated', 'true');
+                        input.attr('readonly', 'true'); // Set readonly attribute
+                        input.addClass('readonly'); // Add readonly class
+                        input.css('background-color', '#f0f0f0'); // Gray out the input
+                        if (selector.endsWith('_state')) {
+                            input.addClass('readonly'); // Add readonly class
+                            input.siblings('.select2-container').find('span.selection').addClass('readonly'); // Add readonly class to select2 container
+                        }
+                    }
+                }
+            });
+        }
+    });
 
     $('#use-original-address').on('click', () => {
         $('#address-validation-modal').hide();
