@@ -183,19 +183,15 @@ jQuery(document).ready(function($) {
                                     : '';
                                 const urbanization = components.urbanization || '';
                                 const suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`.trim();
+                                const fullAddress = `${suggestedStreet}${deliveryLine2 ? ` ${deliveryLine2}` : ''}, ${components.city_name}, ${components.state_abbreviation} ${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`;
 
                                 return `
-                                    <label>
-                                        <input type="radio" name="suggested-address" value="${index}" ${index === 0 ? 'checked' : ''}>
-                                        ${urbanization ? `<span class="modal-urbanization">${urbanization}</span>` : ''}
-                                        <span class="modal-street">${suggestedStreet}</span>
-                                        ${deliveryLine2 ? `<span class="modal-street2">${deliveryLine2}</span>` : ''}
-                                        ${secondaryAddress ? `<span>${secondaryAddress}</span>` : ''}
-                                        <span class="modal-city">${components.city_name}</span>
-                                        <span class="modal-state">${components.state_abbreviation}</span>
-                                        <span class="modal-zip">${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}</span>
-                                    </label>
-                                    <br>
+                                    <div class="suggested-address">
+                                        <label>
+                                            <input type="radio" name="suggested-address" value="${index}" ${index === 0 ? 'checked' : ''}>
+                                            <span>${fullAddress}</span>
+                                        </label>
+                                    </div>
                                 `;
                             }).join('');
 
@@ -412,28 +408,6 @@ jQuery(document).ready(function($) {
                 }
             });
         }
-    });
-
-    $('#use-original-address').on('click', () => {
-        $('#address-validation-modal').hide();
-        // Remove data-validated attribute and readonly class from current address type fields
-        const fields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
-        fields.forEach(selector => {
-            const input = $(selector);
-            if (input.length) {
-                const wrapper = input.closest('.woocommerce-input-wrapper');
-                if (wrapper.length) {
-                    wrapper.removeAttr('data-validated');
-                }
-                input.removeAttr('readonly');
-                input.removeClass('readonly'); // Remove readonly class
-                input.css('background-color', ''); // Reset background color
-                if (selector.endsWith('_state')) {
-                    input.prop('disabled', false); // Enable the select field
-                    input.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly class from select2 container
-                }
-            }
-        });
     });
 
     $('#use-corrected-address').on('click', () => {
