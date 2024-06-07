@@ -40,7 +40,7 @@ add_action('wp_enqueue_scripts', 'add_custom_wc_checkout_params');
 
 function smarty_enqueue_scripts() {
     if ( is_checkout() ) {
-        wp_enqueue_script('smarty-validation-js', plugins_url('js/validation.js', __FILE__), array('jquery'), '1.0', true);
+        wp_enqueue_script('smarty-validation-js', plugins_url('dist/js/smarty-validation.js', __FILE__), array('jquery'), '1.0', true);
         wp_enqueue_style( 'smarty-validation-css', plugins_url( 'css/style.css', __FILE__ ), array(), '1.0' );
     }
 }
