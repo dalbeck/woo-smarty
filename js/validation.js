@@ -199,14 +199,26 @@ jQuery(document).ready(function($) {
                                     address2Value = `${urbanization} ${address2Value}`.trim();
                                 }
 
-                                const fullAddress = `
-                                    <div class="suggested-address single-response">
-                                        <span>${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}</span>
-                                        <span>${address2Value ? address2Value + '<br>' : ''}</span>
-                                        <span>${components.city_name}</span>
-                                        <span>${components.state_abbreviation}</span>
-                                        <span>${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}</span>
-                                    </div>`;
+                                let fullAddress;
+                                if (metadata.zip_type === 'Military' || metadata.record_type === 'P') {
+                                    fullAddress = `
+                                        <div class="suggested-address single-response">
+                                            <span>${deliveryLine1}</span>
+                                            <span>${address2Value ? address2Value + '<br>' : ''}</span>
+                                            <span>${components.city_name}</span>
+                                            <span>${components.state_abbreviation}</span>
+                                            <span>${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}</span>
+                                        </div>`;
+                                } else {
+                                    fullAddress = `
+                                        <div class="suggested-address single-response">
+                                            <span>${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}</span>
+                                            <span>${address2Value ? address2Value + '<br>' : ''}</span>
+                                            <span>${components.city_name}</span>
+                                            <span>${components.state_abbreviation}</span>
+                                            <span>${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}</span>
+                                        </div>`;
+                                }
                                 $('#api-suggested-address').html(fullAddress);
                             } else {
                                 // Add radio buttons for each suggested address
@@ -232,7 +244,12 @@ jQuery(document).ready(function($) {
                                         address2Value = `${urbanization} ${address2Value}`.trim();
                                     }
 
-                                    const fullAddress = `${suggestedStreet}, ${address2Value ? address2Value + '<br>' : ''} ${components.city_name}, ${components.state_abbreviation} ${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`;
+                                    let fullAddress;
+                                    if (address.metadata.zip_type === 'Military' || address.metadata.record_type === 'P') {
+                                        fullAddress = `${components.street_name} ${components.primary_number}, ${address2Value ? address2Value + '<br>' : ''} ${components.city_name}, ${components.state_abbreviation} ${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`;
+                                    } else {
+                                        fullAddress = `${suggestedStreet}, ${address2Value ? address2Value + '<br>' : ''} ${components.city_name}, ${components.state_abbreviation} ${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`;
+                                    }
 
                                     return `
                                         <div class="suggested-address">
