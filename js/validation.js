@@ -258,7 +258,7 @@ jQuery(document).ready(function($) {
 
                             // Populate address_2 with delivery_line_2 if present, else use secondary_designator and secondary_number
                             let address2Value = deliveryLine2 || '';
-                            if (!address2Value && components.secondary_designator && components.secondary_number) {
+                            if (!address2Value && components.secondary_designator && components.secondary_number && !analysis.dpv_footnotes.includes('TA') && analysis.dpv_match_code !== 'S') {
                                 address2Value = `${components.secondary_designator} ${components.secondary_number}`;
                             }
 
@@ -415,7 +415,7 @@ jQuery(document).ready(function($) {
             }
 
             $(addressFields[0]).val(suggestedStreet);
-            const secondaryAddress = (components.secondary_designator && components.secondary_number)
+            const secondaryAddress = (components.secondary_designator && components.secondary_number && !analysis.dpv_footnotes.includes('TA') && analysis.dpv_match_code !== 'S')
                 ? `${components.secondary_designator} ${components.secondary_number}`
                 : '';
             const urbanization = components.urbanization || '';
@@ -501,7 +501,7 @@ jQuery(document).ready(function($) {
             }
 
             $(addressFields[0]).val(suggestedStreet);
-            const secondaryAddress = components.secondary_designator
+            const secondaryAddress = components.secondary_designator && !analysis.dpv_footnotes.includes('TA') && analysis.dpv_match_code !== 'S'
                 ? `${components.secondary_designator} ${components.secondary_number}`
                 : '';
             const urbanization = components.urbanization || '';
