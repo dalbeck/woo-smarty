@@ -27,7 +27,7 @@ Danny Albeck - [https://github.com/dalbeck](https://github.com/dalbeck)
 
 ## Version
 
-2.1.0
+2.1.1
 
 ## WooCommerce Compatibility
 
