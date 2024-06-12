@@ -1,10 +1,12 @@
-jQuery(document).ready(function($) {
-    function allRequiredFieldsFilled(fields) {
-        return fields.every(selector => {
-            const input = $(selector);
-            return input.length && input.val().trim();
-        });
-    }
+(function($) {
+    $(document).ready(function() {
+        function allRequiredFieldsFilled(fields) {
+            return fields.every(selector => {
+                const input = $(selector);
+                return input.length && input.val().trim();
+            });
+        }
 
-    window.allRequiredFieldsFilled = allRequiredFieldsFilled;
-});
+        window.allRequiredFieldsFilled = allRequiredFieldsFilled;
+    });
+})(jQuery);
