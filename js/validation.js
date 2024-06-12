@@ -189,9 +189,20 @@ jQuery(document).ready(function($) {
                                 // Use the single suggested address directly
                                 const singleAddress = data[0];
                                 const components = singleAddress.components;
+                                const secondaryAddress = (components.secondary_designator && components.secondary_number && !analysis.dpv_footnotes.includes('TA') && analysis.dpv_match_code !== 'S')
+                                    ? `${components.secondary_designator} ${components.secondary_number}`
+                                    : '';
+                                const urbanization = components.urbanization || '';
+                                let address2Value = deliveryLine2 || secondaryAddress;
+
+                                if (urbanization) {
+                                    address2Value = `${urbanization} ${address2Value}`.trim();
+                                }
+
                                 const fullAddress = `
                                     <div class="suggested-address single-response">
                                         <span>${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}</span>
+                                        <span>${address2Value ? address2Value + '<br>' : ''}</span>
                                         <span>${components.city_name}</span>
                                         <span>${components.state_abbreviation}</span>
                                         <span>${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}</span>
@@ -216,7 +227,12 @@ jQuery(document).ready(function($) {
                                         console.log('Modified deliveryLine1 for dpv_match_code "S" or dpv_footnotes containing "TA":', deliveryLine1);
                                     }
 
-                                    const fullAddress = `${suggestedStreet}, ${components.city_name}, ${components.state_abbreviation} ${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`;
+                                    let address2Value = deliveryLine2 || secondaryAddress;
+                                    if (urbanization) {
+                                        address2Value = `${urbanization} ${address2Value}`.trim();
+                                    }
+
+                                    const fullAddress = `${suggestedStreet}, ${address2Value ? address2Value + '<br>' : ''} ${components.city_name}, ${components.state_abbreviation} ${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`;
 
                                     return `
                                         <div class="suggested-address">
@@ -414,16 +430,16 @@ jQuery(document).ready(function($) {
                 console.log('Modified deliveryLine1 for dpv_match_code "S" or dpv_footnotes containing "TA":', deliveryLine1);
             }
 
-            $(addressFields[0]).val(suggestedStreet);
-            const secondaryAddress = (components.secondary_designator && components.secondary_number && !analysis.dpv_footnotes.includes('TA') && analysis.dpv_match_code !== 'S')
+            let address2Value = deliveryLine2 || (components.secondary_designator && components.secondary_number && !analysis.dpv_footnotes.includes('TA') && analysis.dpv_match_code !== 'S')
                 ? `${components.secondary_designator} ${components.secondary_number}`
                 : '';
             const urbanization = components.urbanization || '';
-            let address2Value = deliveryLine2 || secondaryAddress;
 
             if (urbanization) {
                 address2Value = `${urbanization} ${address2Value}`.trim();
             }
+
+            $(addressFields[0]).val(suggestedStreet);
             $(addressFields[4]).val(address2Value);
             $(addressFields[1]).val(components.city_name);
             $(addressFields[2]).val(`${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`);
@@ -500,16 +516,16 @@ jQuery(document).ready(function($) {
                 console.log('Modified deliveryLine1 for dpv_match_code "S" or dpv_footnotes containing "TA":', deliveryLine1);
             }
 
-            $(addressFields[0]).val(suggestedStreet);
-            const secondaryAddress = components.secondary_designator && !analysis.dpv_footnotes.includes('TA') && analysis.dpv_match_code !== 'S'
+            let address2Value = deliveryLine2 || (components.secondary_designator && components.secondary_number && !analysis.dpv_footnotes.includes('TA') && analysis.dpv_match_code !== 'S')
                 ? `${components.secondary_designator} ${components.secondary_number}`
                 : '';
             const urbanization = components.urbanization || '';
-            let address2Value = deliveryLine2 || secondaryAddress;
 
             if (urbanization) {
                 address2Value = `${urbanization} ${address2Value}`.trim();
             }
+
+            $(addressFields[0]).val(suggestedStreet);
             $(addressFields[4]).val(address2Value);
             $(addressFields[1]).val(components.city_name);
             $(addressFields[2]).val(`${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`);
