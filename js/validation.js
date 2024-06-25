@@ -1,6 +1,8 @@
 jQuery(document).ready(function($) {
     console.log('Address validation script loaded'); // Confirm script load
 
+    let billingAddress2Value = '';
+
     // Clear address fields if the user is not logged in
     if (typeof wc_checkout_params !== 'undefined' && wc_checkout_params.is_user_logged_in === "0") {
         const fieldsToClear = [
@@ -486,6 +488,7 @@ jQuery(document).ready(function($) {
 
     $('#use-original-address').on('click', () => {
         $('#address-validation-modal').hide();
+
         // Remove data-validated attribute and readonly class from current address type fields
         const fields = currentAddressType === 'billing' ? billingAllFields : shippingAllFields;
         fields.forEach(selector => {
@@ -504,6 +507,9 @@ jQuery(document).ready(function($) {
                 }
             }
         });
+
+        // Restore the #billing_address_2 value
+        $('#billing_address_2').val(billingAddress2Value);
     });
 
     $('#use-corrected-address').on('click', () => {
@@ -573,6 +579,16 @@ jQuery(document).ready(function($) {
                 $('#address-validation-modal').hide();
             }, 100);
         }
+    });
+
+    // Store the #billing_address_2 value before showing the modal
+    $('#billing_address_2').on('change', function() {
+        billingAddress2Value = $(this).val();
+    });
+
+    // Store the #billing_address_2 value when the user starts typing
+    $('#billing_address_2').on('input', function() {
+        billingAddress2Value = $(this).val();
     });
 
     $('#close-validation-modal').on('click', () => {
