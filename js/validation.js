@@ -187,6 +187,91 @@ jQuery(document).ready(function($) {
                                 <span class="modal-zip">${zipcode}</span>
                             `);
 
+                            // Normalize the saved address
+                            const savedStreet = $('#billing_address_1').val().replace(/\s+/g, ' ').trim();
+                            const savedCity = $('#billing_city').val().replace(/\s+/g, ' ').trim();
+                            const savedState = $('#billing_state').val().replace(/\s+/g, ' ').trim();
+                            const savedZip = $('#billing_postcode').val().replace(/\s+/g, ' ').trim();
+
+                            // Log these values to confirm
+                            console.log('Extracted Saved Address:', { savedStreet, savedCity, savedState, savedZip });
+
+                            // Normalize the suggested address from Smarty API
+                            let suggestedStreet = `${components.primary_number} ${components.street_predirection || ''} ${components.street_name} ${components.street_suffix || ''} ${components.street_postdirection || ''}`
+                                .replace(/\s+/g, ' ').trim();
+                            let suggestedCity = components.city_name.replace(/\s+/g, ' ').trim();
+                            let suggestedState = components.state_abbreviation.replace(/\s+/g, ' ').trim();
+                            let suggestedZip = `${components.zipcode}${components.plus4_code ? '-' + components.plus4_code : ''}`
+                                .replace(/\s+/g, ' ').trim();
+
+                            // Log both saved and suggested addresses for comparison
+                            console.log('Saved Address:', { savedStreet, savedCity, savedState, savedZip });
+                            console.log('Suggested Address:', { suggestedStreet, suggestedCity, suggestedState, suggestedZip });
+
+                            // Compare normalized addresses
+                            if (suggestedStreet === savedStreet && suggestedCity === savedCity && suggestedState === savedState && suggestedZip === savedZip) {
+                                console.log('Saved address matches suggested address. Skipping modal.');
+
+                                // Apply the same validation logic as used when selecting an address from the modal
+                                fields.forEach(selector => {
+                                    const input = $(selector);
+                                    if (input.length && input.val().trim()) {
+                                        const wrapper = input.closest('.woocommerce-input-wrapper');
+                                        if (wrapper.length) {
+                                            wrapper.attr('data-validated', 'true'); // Mark as validated
+                                        }
+                                        input.attr('readonly', 'true'); // Set readonly attribute
+                                        input.addClass('readonly'); // Add readonly class
+                                        input.css('background-color', '#f0f0f0'); // Gray out the input
+
+                                        // Handle select fields (state fields)
+                                        if (selector === '#shipping_state' || selector === '#billing_state') {
+                                            input.addClass('readonly'); // Add readonly class
+                                            input.siblings('.select2-container').find('span.selection').addClass('readonly'); // Make select2 read-only
+                                        }
+                                    }
+                                });
+
+                                // Insert the link to allow re-editing the address fields
+                                const editAddressLinkId = addressType === 'billing' ? '#edit-billing-address-link' : '#edit-shipping-address-link';
+                                const container = addressType === 'billing' ? $('#billing_email_field') : $('.woocommerce-shipping-fields');
+                                if (container.length && !$(editAddressLinkId).length) {
+                                    const editAddressLink = $('<a>', {
+                                        id: editAddressLinkId.substring(1),
+                                        href: '#',
+                                        text: `Click here to update your ${addressType} address.`,
+                                        style: 'display: block; margin-top: 10px;'
+                                    });
+
+                                    container.after(editAddressLink);
+
+                                    // Add event listener to remove readonly and allow editing when the link is clicked
+                                    editAddressLink.on('click', function(event) {
+                                        event.preventDefault();
+
+                                        fields.forEach(selector => {
+                                            const input = $(selector);
+                                            if (input.length) {
+                                                input.removeAttr('readonly'); // Remove readonly attribute
+                                                input.removeClass('readonly'); // Remove readonly class
+                                                input.css('background-color', ''); // Reset background color
+
+                                                // Handle select fields (state fields)
+                                                if (selector === '#billing_state' || selector === '#shipping_state') {
+                                                    input.prop('disabled', false); // Enable select field
+                                                    input.siblings('.select2-container').find('span.selection').removeClass('readonly'); // Remove readonly from select2
+                                                }
+                                            }
+                                        });
+
+                                        // Remove the "Edit Address" link after clicking
+                                        $(editAddressLinkId).remove();
+                                    });
+                                }
+
+                                return; // Skip showing the modal
+                            }
+
                             if (data.length === 1) {
                                 // Use the single suggested address directly
                                 const singleAddress = data[0];
